@@ -946,7 +946,7 @@
             { scoreThreshold: 80, hits: 5, hueRotate: 240, sprite: 'https://i.ibb.co/TMFR5810/file-00000000646c61f8b1feda6cccc966af.png' }  
         ];
 
-        // Cores de fundo do cenário para indicar níveis avançados (mais coloridas)
+        // Background colors for advanced levels (more colorful)
         const backgroundPresets = [
             'linear-gradient(to bottom, #4a90e2 0%, #2e6cb8 100%)', 
             'linear-gradient(to bottom, #7ed321 0%, #5cb82e 100%)', 
@@ -960,12 +960,12 @@
         let currentStageHueRotation = 0; 
         const stageHueRotationIncrement = 60; 
 
-        // Variáveis para controle de toque
+        // Touch control variables
         let touchStartX = 0;
         let touchStartY = 0; 
         let playerMoving = false;
 
-        // Referência ao elemento de áudio
+        // Audio element references
         const backgroundMusic = new Audio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3'); 
         backgroundMusic.loop = true; 
         backgroundMusic.volume = 0.5; 
