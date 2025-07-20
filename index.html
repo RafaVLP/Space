@@ -1,0 +1,2479 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tiro no Metrô</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start 2P&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif; /* Fonte padrão, mas Press Start 2P para elementos do jogo */
+            background-color: #1a202c; /* Cor de fundo escura */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden; /* Evita barras de rolagem */
+        }
+
+        .game-master-wrapper {
+            display: flex;
+            flex-direction: column; /* Empilha os contêineres verticalmente */
+            border-radius: 1.5rem; /* Cantos mais arredondados para o wrapper geral */
+            overflow: hidden; /* Garante que o conteúdo respeite o border-radius */
+            box-shadow: 0 15px 25px rgba(0, 0, 0, 0.7); /* Sombra mais forte para profundidade */
+            border: 4px solid #4a5568; /* Borda mais grossa */
+            width: 400px; /* Largura fixa para a área total do jogo */
+            height: 700px; /* Altura fixa para a área total do jogo */
+            max-width: 95vw; /* Garante que caiba em telas menores */
+            max-height: 95vh; /* Garante que caiba em telas menores */
+            background-color: #2d3748; /* Fundo para o próprio wrapper */
+            position: relative; /* Para sobreposição da tela inicial */
+        }
+
+        /* Contêiner superior para informações do jogador */
+        .top-ui-container {
+            width: 100%;
+            background-color: #1a202c;
+            padding: 0.8rem 1rem;
+            display: flex;
+            flex-direction: column; /* Empilha itens verticalmente */
+            gap: 0.5rem;
+            color: #cbd5e0;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.7rem;
+            flex-shrink: 0;
+            border-bottom: 2px solid #4a5568;
+            box-shadow: inset 0 -3px 5px rgba(0,0,0,0.3);
+            z-index: 10;
+        }
+
+        .player-stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); /* 3 colunas para Pontos, Dano, Nível */
+            gap: 0.5rem;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            background-color: #2d3748;
+            padding: 0.4rem 0.6rem;
+            border-radius: 0.5rem;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .info-item i {
+            font-size: 1rem;
+            color: #f6e05e;
+        }
+
+        .info-item span {
+            font-size: 0.6rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Barras de vida */
+        .health-bar-container, .shield-health-bar-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background-color: #2d3748;
+            padding: 0.4rem 0.6rem;
+            border-radius: 0.5rem;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
+        }
+
+        .health-bar, .shield-health-bar {
+            flex-grow: 1;
+            height: 12px;
+            background-color: #555;
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .health-fill {
+            height: 100%;
+            background-color: #48bb78;
+            width: 100%;
+            transition: width 0.2s ease-out, background-color 0.2s ease-out;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .health-text, .shield-health-text {
+            position: absolute;
+            color: #ffffff;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.5rem;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+            z-index: 2;
+            line-height: 1;
+        }
+
+        .shield-health-fill {
+            height: 100%;
+            background-color: #0000FF;
+            width: 100%;
+            transition: width 0.2s ease-out;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* Contêiner inferior para pontos e barra de progresso do boss */
+        .bottom-ui-container {
+            width: 100%;
+            background-color: #1a202c;
+            padding: 0.8rem 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            color: #cbd5e0;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.7rem;
+            flex-shrink: 0;
+            border-top: 2px solid #4a5568;
+            box-shadow: inset 0 3px 5px rgba(0,0,0,0.3);
+            z-index: 10;
+        }
+
+        .score-display-item {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            background-color: #2d3748;
+            padding: 0.4rem 0.6rem;
+            border-radius: 0.5rem;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
+            white-space: nowrap;
+            overflow: hidden; /* Garante que o texto seja cortado se for muito longo */
+            text-overflow: ellipsis;
+            justify-content: center; /* Centraliza o texto de pontos */
+        }
+
+        .boss-progress-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background-color: #2d3748;
+            padding: 0.4rem 0.6rem;
+            border-radius: 0.5rem;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
+        }
+
+        .boss-progress-bar {
+            flex-grow: 1;
+            height: 12px;
+            background-color: #555;
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .boss-progress-fill {
+            height: 100%;
+            background-color: #f6e05e; /* Amarelo para progresso */
+            width: 0%;
+            transition: width 0.2s ease-out;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .boss-progress-text {
+            position: absolute;
+            color: #ffffff;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.5rem;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+            z-index: 2;
+            line-height: 1;
+        }
+
+        .game-container {
+            position: relative;
+            width: 100%;
+            height: calc(100% - 200px); /* Ajusta a altura para acomodar as novas UIs superior e inferior */
+            overflow: hidden;
+            flex-grow: 1;
+            /* border-top: 2px solid #4a5568; REMOVIDO: Borda agora está nos contêineres superior/inferior */
+            transition: filter 0.5s ease-in-out;
+        }
+
+        /* Segmentos de fundo para rolagem infinita com rotação */
+        .background-segment {
+            position: absolute;
+            width: 100%;
+            height: 100%; /* Cada segmento tem a altura do contêiner do jogo */
+            background-image: url('https://i.ibb.co/fYVsCnG4/file-000000003bdc622f9c39eafbf705cd33.png'); /* NOVA IMAGEM DE FUNDO */
+            background-size: cover; /* Cobre todo o segmento */
+            background-repeat: no-repeat;
+            background-position: center;
+            /* Transição removida na transformação para evitar problemas de emenda */
+            z-index: 0; /* Definido como 0 para ficar atrás de outros elementos do jogo */
+        }
+
+        .background-segment.rotated-180 {
+            transform: rotate(180deg);
+        }
+
+        .player {
+            position: absolute;
+            bottom: 20px;
+            width: 60px; /* Ajuste a largura conforme necessário para o seu sprite */
+            height: 60px; /* Ajuste a altura conforme necessário para o seu sprite */
+            background-image: url('https://i.ibb.co/mrgQRnPP/file-00000000bd8861f8b1feda6cccc966af.png'); /* Sprite do jogador */
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            border-radius: 50%; /* Forma de círculo */
+            left: calc(50% - 30px); /* Centraliza horizontalmente */
+            box-shadow: 0 0 15px 5px rgba(99, 179, 237, 0.9), 0 0 25px 10px rgba(99, 179, 237, 0.5); /* Brilho mais intenso */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 7; /* Garante que o jogador esteja no topo */
+            transition: filter 0.1s ease-out; /* Transição suave para mudanças de filtro */
+        }
+
+        .player.player-hit-effect {
+            filter: invert(100%) hue-rotate(180deg); /* Inverte cores e muda matiz ao ser atingido */
+        }
+
+        /* Novo estilo para o jogador com escudo ativo */
+        .player.player-shield-active {
+            filter: hue-rotate(200deg) brightness(1.2); /* Exemplo: azulado e mais brilhante */
+            box-shadow: 0 0 20px 8px rgba(0, 0, 255, 0.9), 0 0 30px 15px rgba(0, 0, 255, 0.5); /* Brilho azulado */
+        }
+
+        .bullet {
+            position: absolute;
+            background-color: #f6e05e; /* Amarelo para a bala */
+            width: 8px;
+            height: 20px;
+            border-radius: 0.25rem;
+            box-shadow: 0 0 8px 3px rgba(246, 224, 94, 0.9), 0 0 15px 5px rgba(246, 224, 94, 0.5); /* Brilho mais intenso */
+            z-index: 5; /* Para ficar acima dos objetos em queda */
+        }
+
+        .falling-object {
+            position: absolute;
+            top: -60px; /* Começa acima da tela, ajustado para o novo tamanho */
+            width: 60px; /* Mesmo tamanho do jogador */
+            height: 60px; /* Mesmo tamanho do jogador */
+            background-image: url('https://i.ibb.co/TMFR5810/file-00000000646c61f8b1feda6cccc966af.png'); /* Sprite do inimigo */
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            transition: filter 0.1s ease-out; /* Transição suave para mudanças de filtro */
+            z-index: 2; /* Acima do fundo */
+        }
+
+        .falling-object.enemy-hit-effect {
+            filter: brightness(200%) saturate(200%); /* Flash brilhante ao ser atingido */
+        }
+
+        /* Estilos para o novo inimigo pesado */
+        .falling-object.heavy-enemy {
+            width: 72px; /* Tamanho 20% maior que 60px */
+            height: 72px; /* Tamanho 20% maior que 60px */
+            z-index: 6; /* Acima dos inimigos normais */
+        }
+
+        /* Estilos da barra de vida do inimigo */
+        .enemy-health-bar-wrapper {
+            position: absolute;
+            width: 100%; /* Ocupa a largura do inimigo */
+            top: -15px; /* Posição acima do inimigo */
+            left: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 3; /* Acima do inimigo */
+        }
+
+        .enemy-health-bar {
+            width: 80%; /* Largura da barra dentro do wrapper */
+            height: 5px; /* Altura da barra */
+            background-color: #555;
+            border-radius: 2.5px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .enemy-health-fill {
+            height: 100%;
+            background-color: #48bb78; /* Verde */
+            width: 100%; /* Largura inicial */
+            transition: width 0.1s ease-out, background-color 0.1s ease-out;
+        }
+
+
+        .power-up, .debuff {
+            position: absolute;
+            /* top will be set by JS, no default top here */
+            width: 30px;
+            height: 30px;
+            border-radius: 50%; /* Círculo para power-up */
+            /* box-shadow será definido via JS */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+            z-index: 6; /* Acima dos objetos em queda */
+            animation: pulse 1s infinite alternate; /* Efeito de pulsação */
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            /* filter será definido via JS para anular o filtro do game-container */
+        }
+
+        /* REMOVIDO: Estilo .debuff estático */
+        /* REMOVIDO: Estilo .power-up.health-up estático */
+
+        @keyframes pulse {
+            from { transform: scale(1); opacity: 1; }
+            to { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        .game-over-screen, .start-screen, .stage-clear-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9); /* Fundo semi-transparente escuro */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            font-family: 'Press Start 2P', cursive;
+            text-align: center;
+            z-index: 30; /* Garante que esteja no topo */
+            border-radius: 1.5rem; /* Corresponde ao border-radius do wrapper */
+        }
+
+        .game-over-screen h1, .start-screen h1, .stage-clear-screen h1 {
+            font-size: 1.8rem; /* Título maior para game over/início */
+            margin-bottom: 1rem;
+            color: #f6e05e; /* Título amarelo */
+            text-shadow: 0 0 10px rgba(246, 224, 94, 0.8);
+        }
+
+        .game-over-screen p, .stage-clear-screen p {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .restart-button, .start-button, .continue-button {
+            background-color: #48bb78; /* Verde */
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 0.75rem;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 1rem; /* Tamanho da fonte ajustado para botões */
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            box-shadow: 0 6px 12px rgba(72, 187, 120, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .restart-button:hover, .start-button:hover, .continue-button:hover {
+            background-color: #38a169;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 16px rgba(72, 187, 120, 0.6);
+        }
+
+        .restart-button:active, .start-button:active, .continue-button:active {
+            transform: translateY(0);
+            box-shadow: 0 3px 6px rgba(72, 187, 120, 0.4);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Estilos do Boss */
+        .boss {
+            position: absolute;
+            top: 50px; /* Posição inicial do boss */
+            width: 100px; /* Tamanho do boss */
+            height: 100px;
+            background-image: url('https://i.ibb.co/WWJbQ2xC/file-0000000084d061f8ac4929730520d69e.png'); /* Sprite do Boss */
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start; /* Alinha a barra de vida no topo */
+            align-items: center;
+            z-index: 8; /* Acima da maioria dos elementos */
+            transition: filter 0.1s ease-out; /* Transição suave para mudanças de filtro */
+        }
+
+        .boss-health-bar-wrapper { /* Novo wrapper para a barra de vida do boss */
+            position: absolute;
+            width: 100px; /* Mesma largura do boss */
+            /* top e left serão definidos via JS para seguir o boss */
+            z-index: 9; /* Acima do boss para garantir visibilidade */
+        }
+
+        .boss-health-bar {
+            width: 100%; /* Ocupa toda a largura do wrapper */
+            height: 15px; /* Ligeiramente mais alto para o texto */
+            background-color: #555;
+            border-radius: 5px;
+            overflow: hidden;
+            position: relative; /* Para posicionamento do texto numérico */
+            border: 1px solid rgba(255,255,255,0.2); /* Borda para a barra */
+        }
+
+        .boss-health-fill {
+            height: 100%;
+            background-color: #48bb78; /* Verde para vida cheia */
+            width: 100%; /* Largura inicial */
+            transition: width 0.2s ease-out; /* Transição suave para a barra de vida */
+        }
+
+        .boss-health-text {
+            position: absolute; /* Posição absoluta dentro de .boss-health-bar */
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%); /* Centraliza o texto precisamente */
+            color: #ffffff; /* Texto branco para números de vida */
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.5rem; /* Fonte menor para números */
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8); /* Sombra para legibilidade */
+            z-index: 2; /* Garante que o texto esteja acima do preenchimento */
+            white-space: nowrap; /* Impede a quebra de linha */
+            line-height: 1; /* Garante que o texto não quebre linha */
+        }
+
+        .boss-bullet {
+            position: absolute;
+            background-image: url('https://placehold.co/15x15/ff0000/FFFFFF/png?text=B'); /* Exemplo de sprite de bala do boss */
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%; /* Forma de círculo */
+            box-shadow: 0 0 10px 3px rgba(255, 0, 0, 0.8);
+            z-index: 4; /* Abaixo das balas do jogador, acima dos inimigos normais */
+        }
+
+        /* Novo estilo para projéteis de inimigos normais */
+        .enemy-bullet {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%; /* Circular */
+            z-index: 4; /* Abaixo das balas do jogador, acima dos objetos normais */
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+        /* Cor para balas de inimigos normais */
+        .enemy-bullet-color {
+            background-color: #ffcc00; /* Amarelo-laranja */
+            box-shadow: 0 0 8px 2px rgba(255, 204, 0, 0.7);
+        }
+
+        /* Novo estilo para projéteis de inimigos pesados */
+        .enemy-bullet.heavy-enemy-bullet {
+            width: 20px;
+            height: 20px;
+        }
+        /* Cor para balas de inimigos pesados */
+        .heavy-enemy-bullet-color {
+            background-color: #8B0000; /* Vermelho escuro */
+            box-shadow: 0 0 12px 4px rgba(139, 0, 0, 0.8);
+        }
+
+
+        /* Novo estilo para obstáculos */
+        .obstacle {
+            position: absolute;
+            top: -50px; /* Começa acima da tela */
+            width: 45px; /* Largura ajustada para a nova imagem */
+            height: 45px; /* Altura ajustada para a nova imagem */
+            background-image: url('https://i.ibb.co/GQNYF8tQ/file-000000007a5c61f7ab26c44fcda85d3b.png'); /* NOVA IMAGEM DE OBSTÁCULO */
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            border-radius: 50%; /* Torna o elemento redondo para corresponder à imagem */
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.7);
+            z-index: 3; /* Abaixo dos inimigos, acima do fundo */
+            filter: hue-rotate(0deg); /* Valor inicial, será alterado via JS */
+        </style>
+</head>
+<body>
+    <div class="game-master-wrapper">
+        <!-- Top UI Container for Player Stats and Health -->
+        <div class="top-ui-container">
+            <div class="player-stats-row">
+                <div class="info-item">
+                    <i class="fas fa-fist-raised"></i>
+                    <span>Dano: <span id="playerDamageDisplay">1</span></span>
+                </div>
+                <div class="info-item">
+                    <i class="fas fa-medal"></i>
+                    <span>Nível: <span id="playerLevelDisplay">1</span></span>
+                </div>
+                <div class="info-item">
+                    <i class="fas fa-star"></i>
+                    <span>Pontos: <span id="scoreValue">0</span></span>
+                </div>
+            </div>
+            <!-- Barra de vida do jogador -->
+            <div class="health-bar-container" id="playerHealthBarContainer">
+                <i class="fas fa-heart"></i>
+                <span>Vida:</span>
+                <div class="health-bar">
+                    <div class="health-fill" id="healthFill"></div>
+                    <span class="health-text" id="playerHealthText"></span>
+                </div>
+            </div>
+            <!-- Nova barra de vida do escudo -->
+            <div class="shield-health-bar-container hidden" id="shieldHealthBarContainer">
+                <i class="fas fa-shield-alt"></i> <!-- Ícone de escudo -->
+                <span>Escudo:</span>
+                <div class="shield-health-bar">
+                    <div class="shield-health-fill" id="shieldHealthFill"></div>
+                    <span class="shield-health-text" id="shieldHealthText"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="game-container" id="gameContainer">
+            <div class="background-segment" id="bgSegment1"></div>
+            <div class="background-segment" id="bgSegment2"></div>
+
+            <div class="player" id="player">
+            </div>
+
+            <div class="start-screen" id="startScreen">
+                <h1>TIRO NO METRÔ</h1>
+                <button class="start-button" id="startButton">INICIAR JOGO</button>
+            </div>
+
+            <div class="game-over-screen hidden" id="gameOverScreen">
+                <h1>FIM DE JOGO!</h1>
+                <p>Sua Pontuação: <span id="finalScore">0</span></p>
+                <button class="restart-button" id="restartButton">JOGAR NOVAMENTE</button>
+            </div>
+
+            <div class="stage-clear-screen hidden" id="stageClearScreen">
+                <h1>ESTÁGIO CONCLUÍDO!</h1>
+                <p>Pontuação do Estágio: <span id="stageScore">0</span></p>
+                <button class="continue-button" id="continueButton">CONTINUAR</button>
+            </div>
+        </div>
+
+        <!-- Bottom UI Container for Score and Boss Progress -->
+        <div class="bottom-ui-container">
+            <div class="boss-progress-container">
+                <i class="fas fa-dungeon"></i> <!-- Ícone para Boss/Progresso -->
+                <span>Boss: <span id="bossProgressText">0 / 50</span></span>
+                <div class="boss-progress-bar">
+                    <div class="boss-progress-fill" id="bossProgressFill"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Referências aos elementos DOM
+        const gameContainer = document.getElementById('gameContainer');
+        const player = document.getElementById('player');
+        const scoreValueDisplay = document.getElementById('scoreValue'); 
+        const healthFill = document.getElementById('healthFill'); 
+        const playerHealthText = document.getElementById('playerHealthText'); 
+        const playerDamageDisplay = document.getElementById('playerDamageDisplay'); 
+        const playerLevelDisplay = document.getElementById('playerLevelDisplay'); 
+        const gameOverScreen = document.getElementById('gameOverScreen');
+        const finalScoreDisplay = document.getElementById('finalScore');
+        const restartButton = document.getElementById('restartButton');
+        const startScreen = document.getElementById('startScreen');
+        const startButton = document.getElementById('startButton');
+        const stageClearScreen = document.getElementById('stageClearScreen'); 
+        const stageScoreDisplay = document.getElementById('stageScore');     
+        const continueButton = document.getElementById('continueButton');   
+
+        // Referências aos elementos da nova barra de vida do escudo (NOVO)
+        const playerHealthBarContainer = document.getElementById('playerHealthBarContainer');
+        const shieldHealthBarContainer = document.getElementById('shieldHealthBarContainer');
+        const shieldHealthFill = document.getElementById('shieldHealthFill');
+        const shieldHealthText = document.getElementById('shieldHealthText');
+
+        // Referências para a nova barra de progresso do Boss (NOVO)
+        const bossProgressText = document.getElementById('bossProgressText');
+        const bossProgressFill = document.getElementById('bossProgressFill');
+
+        // Segmentos de fundo
+        const bgSegment1 = document.getElementById('bgSegment1');
+        const bgSegment2 = document.getElementById('bgSegment2');
+        const backgroundSegments = [bgSegment1, bgSegment2];
+        
+        // Variáveis de estado do jogo
+        let score = 0;
+        let health = 0; 
+        let maxHealth = 100; 
+        let gameRunning = false;
+        let playerX; 
+        let playerY; 
+        let playerSpeed = 8; 
+        
+        // Velocidades base e ajustadas
+        const baseEnemyMovementSpeed = 5; 
+        const baseEnemyBulletSpeed = 5;   
+        const baseObstacleSpawnInterval = 2500; 
+        let backgroundScrollSpeed = 2; 
+
+        // Velocidades e intervalos ajustados (podem ser modificados pela dificuldade)
+        let currentEnemyMovementSpeed = baseEnemyMovementSpeed * 0.8 * 0.7; 
+        let currentEnemyBulletSpeed = baseEnemyBulletSpeed * 1.4;     
+        let collectibleMovementSpeed = 0; 
+        let currentObstacleSpawnInterval = baseObstacleSpawnInterval; 
+
+        let objectSpawnInterval = 1500; 
+        let lastObjectSpawnTime = 0;
+        let fallingObjects = []; 
+        let obstacles = []; 
+        let animationFrameId;
+
+        // Variáveis de tiro do jogador
+        let bullets = []; 
+        let bulletSpeed = 10; 
+        let shootInterval = 300; 
+        let lastShotTime = 0;
+        let bulletDamage = 1; 
+        let slantedBulletsActive = false; 
+        let sideShotsLevel = 0; 
+
+        // Variáveis de coletáveis
+        let collectibles = []; 
+        let collectibleDropChance = 0.07; 
+        const collectibleStationaryDuration = 5000; 
+
+        // Variáveis do Boss
+        let boss = null;
+        let bossHealth = 0;
+        const initialBossHealth = 200; 
+        let bossBullets = [];
+        let bossShootInterval = 1500; 
+        let lastBossShotTime = 0;
+        let isBossFightActive = false;
+        let bossMovementDirection = 1; 
+        const bossMovementSpeed = 1; 
+        const bossPadding = 10; 
+        let bossLevel = 0; 
+        const initialBossBulletDamage = 20; 
+        let currentBossBulletDamage = initialBossBulletDamage; 
+        let nextBossScoreThreshold = 50; 
+        let bossRageThreshold = 0; 
+        let bossRageActive = false; 
+        let lastBossPowerUpDropTime = 0; 
+        const bossFightPowerUpInterval = 10000; 
+
+        // Valores de rotação de matiz do Boss para diferentes níveis
+        const bossHueRotations = [0, 90, 180, 270, 30]; 
+
+        // Variável de nível do jogador
+        let playerLevel = 1;
+
+        // Variáveis de bala do inimigo
+        let enemyBullets = []; 
+
+        // Variáveis de obstáculo
+        const obstacleDamage = 20; 
+        let lastObstacleSpawnTime = 0;
+
+        // Variáveis do Escudo (ATUALIZADO)
+        let shieldActive = false;
+        let shieldHealth = 0;
+        const maxShieldHealth = 100;
+        let playerHealthBeforeShield = 0; // Armazena a vida do jogador antes do escudo
+
+        // Variável para controlar se um heavy enemy está na tela (NOVO)
+        let isHeavyEnemyOnScreen = false; 
+
+        // Definição do novo inimigo pesado (ATUALIZADO)
+        const heavyEnemyDefinition = {
+            type: 'heavy_enemy',
+            hits: 100, // Vida: 10x o valor anterior (10 * 10 = 100)
+            sprite: 'https://i.ibb.co/LztRMfLf/file-000000003cc4622f93ccd51271bb76c1.png', 
+            width: 72, 
+            height: 72, 
+            speed: 1.95, 
+            shootInterval: 1000, 
+            baseBulletDamage: 11, 
+            hueRotations: [0, 90, 180] 
+        };
+
+        // Dano base das balas inimigas (para escalonamento)
+        const baseEnemyBulletDamage = 10; 
+
+        // Tipos de power-ups
+        const powerUpTypes = [
+            { type: 'damage_1', text: '+1', color: '#48bb78', damageIncrease: 1, sprite: 'https://i.ibb.co/tpmGNwnx/file-00000000c23c61f79d81df79065596e4.png', hueRotate: 140 }, 
+            { type: 'side_bullets', text: '>>', color: '#f6e05e', damageIncrease: 0, sprite: 'https://i.ibb.co/6JGv0Nk7/file-00000000f4c461f7a9330c93bf5d848c.png', hueRotate: 50 }, 
+            { type: 'shield', text: 'ESC', color: '#0000FF', damageIncrease: 0, sprite: 'https://i.ibb.co/HfN8Wkv3/file-00000000553861f78733587cf43f0566.png', hueRotate: 240 }, 
+        ];
+        // Novo tipo de power-up de vida (adicionado separadamente para controle de spawn)
+        const healthPowerUpType = { type: 'health_up', text: '❤️', color: '#f6e05e', healthIncrease: 20, sprite: 'https://i.ibb.co/RpmCgPyD/file-00000000fdf061f59a3de32e7e743922-1.png', hueRotate: 50 }; 
+
+        // Tipo de debuff
+        const debuffType = { type: 'damage_down', text: '-1', color: '#ff7f00', damageDecrease: 1, sprite: 'https://i.ibb.co/FbvqcCqK/file-000000007ee861fdb4cec6e89e0ac0ba.png', hueRotate: 30 }; 
+
+        // Tipos de inimigos e suas propriedades (hits necessários, cor base, rotação de matiz)
+        const enemyTypes = [
+            { scoreThreshold: 0, hits: 1, hueRotate: 0, sprite: 'https://i.ibb.co/TMFR5810/file-00000000646c61f8b1feda6cccc966af.png' }, 
+            { scoreThreshold: 20, hits: 2, hueRotate: 60, sprite: 'https://i.ibb.co/TMFR5810/file-00000000646c61f8b1feda6cccc966af.png' }, 
+            { scoreThreshold: 40, hits: 3, hueRotate: 120, sprite: 'https://i.ibb.co/TMFR5810/file-00000000646c61f8b1feda6cccc966af.png' }, 
+            { scoreThreshold: 60, hits: 4, hueRotate: 180, sprite: 'https://i.ibb.co/TMFR5810/file-00000000646c61f8b1feda6cccc966af.png' }, 
+            { scoreThreshold: 80, hits: 5, hueRotate: 240, sprite: 'https://i.ibb.co/TMFR5810/file-00000000646c61f8b1feda6cccc966af.png' }  
+        ];
+
+        // Cores de fundo do cenário para indicar níveis avançados (mais coloridas)
+        const backgroundPresets = [
+            'linear-gradient(to bottom, #4a90e2 0%, #2e6cb8 100%)', 
+            'linear-gradient(to bottom, #7ed321 0%, #5cb82e 100%)', 
+            'linear-gradient(to bottom, #f5a623 0%, #d08b1a 100%)', 
+            'linear-gradient(to bottom, #bd10e0 0%, #9a0db8 100%)', 
+            'linear-gradient(to bottom, #50e3c2 0%, #3bb29c 100%)', 
+            'linear-gradient(to bottom, #f8e71c 0%, #d0c015 100%)', 
+            'linear-gradient(to bottom, #9013fe 0%, #6b0bc4 100%)'  
+        ];
+        let currentColorIndex = 0;
+        let currentStageHueRotation = 0; 
+        const stageHueRotationIncrement = 60; 
+
+        // Variáveis para controle de toque
+        let touchStartX = 0;
+        let touchStartY = 0; 
+        let playerMoving = false;
+
+        // Referência ao elemento de áudio (NOVO)
+        const backgroundMusic = new Audio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3'); // MÚSICA DO BOSS AGORA É MÚSICA DE FUNDO
+        backgroundMusic.loop = true; // Faz a música tocar em loop
+        backgroundMusic.volume = 0.5; // Define o volume (0.0 a 1.0)
+
+        const playerShotSound = new Audio('https://cdn.pixabay.com/download/audio/2022/03/10/audio_f8319f0956.mp3?filename=gun-gun-shot-6133.mp3'); // Som de tiro do player
+        playerShotSound.volume = 0.3;
+
+        const enemyShotSound = new Audio('https://cdn.pixabay.com/download/audio/2022/03/15/audio_2435555416.mp3?filename=laser-gun-8178.mp3'); // Som de tiro inimigo
+        enemyShotSound.volume = 0.2;
+
+        const bossMusic = new Audio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'); // MÚSICA DE FUNDO AGORA É MÚSICA DO BOSS
+        bossMusic.loop = true;
+        bossMusic.volume = 0.6;
+
+        /**
+         * Atualiza as estatísticas do jogador com base no nível atual.
+         */
+        function updatePlayerStatsBasedOnLevel() {
+            maxHealth = 100 + (playerLevel - 1) * 20; // +20 de vida por nível
+            bulletDamage = 1 + (playerLevel - 1); // +1 de dano por nível
+        }
+
+        /**
+         * Inicializa o estado do jogo para um novo jogo.
+         */
+        function initializeGame() {
+            score = 0;
+            playerLevel = 1; 
+            bossLevel = 0; 
+            nextBossScoreThreshold = 50; 
+            currentStageHueRotation = 0; 
+            gameContainer.style.filter = `hue-rotate(${currentStageHueRotation}deg)`; 
+
+            updatePlayerStatsBasedOnLevel(); 
+            health = maxHealth; 
+            slantedBulletsActive = false; 
+            sideShotsLevel = 0; 
+
+            // Reseta variáveis do escudo (NOVO)
+            shieldActive = false;
+            shieldHealth = 0;
+            playerHealthBeforeShield = 0; // Reseta a vida guardada
+            shieldHealthBarContainer.classList.add('hidden'); // Esconde a barra do escudo
+            playerHealthBarContainer.classList.remove('hidden'); // Garante que a barra de vida do jogador esteja visível
+            player.classList.remove('player-shield-active'); // Remove o tint azul do player
+
+            // Reseta variáveis do Boss (NOVO)
+            bossRageActive = false;
+            lastBossPowerUpDropTime = 0;
+            isHeavyEnemyOnScreen = false; // Reseta a flag do heavy enemy
+
+            scoreValueDisplay.textContent = score; 
+            updateHealthBarDisplay(); 
+            updatePlayerDamageDisplay(); 
+            playerLevelDisplay.textContent = playerLevel; 
+            updateBossProgressBar(); // NOVO: Atualiza a barra de progresso do boss
+
+            // Reinicializa as velocidades e intervalos para os valores base ajustados
+            currentEnemyMovementSpeed = baseEnemyMovementSpeed * 0.8 * 0.7; 
+            currentEnemyBulletSpeed = baseEnemyBulletSpeed * 1.4;
+            currentObstacleSpawnInterval = baseObstacleSpawnInterval; 
+            objectSpawnInterval = 1500; 
+            
+            currentBossBulletDamage = initialBossBulletDamage;
+
+            clearGameElements(); 
+            isBossFightActive = false; 
+            
+            gameOverScreen.classList.add('hidden');
+            startScreen.classList.add('hidden'); 
+            stageClearScreen.classList.add('hidden'); 
+
+            playerX = gameContainer.offsetWidth / 2 - player.offsetWidth / 2;
+            playerY = gameContainer.offsetHeight - player.offsetHeight - 20; 
+            player.style.left = `${playerX}px`;
+            player.style.bottom = `${20}px`; 
+
+            // Inicializa os segmentos de fundo
+            backgroundSegments[0].style.top = '0px';
+            backgroundSegments[1].style.top = `${-gameContainer.offsetHeight}px`; 
+            backgroundSegments[0].classList.remove('rotated-180');
+            backgroundSegments[1].classList.add('rotated-180'); 
+            
+            gameRunning = true;
+            lastObjectSpawnTime = performance.now(); 
+            lastShotTime = performance.now(); 
+            lastObstacleSpawnTime = performance.now(); 
+            startGameLoop();
+            console.log('initializeGame: isBossFightActive =', isBossFightActive); 
+
+            backgroundMusic.play().catch(e => console.log("Erro ao tentar tocar música:", e)); // Tenta tocar a música
+            bossMusic.pause(); // Garante que a música do boss não esteja tocando
+            bossMusic.currentTime = 0;
+        }
+
+        /**
+         * Prepara o jogo para o próximo estágio.
+         */
+        function startNextStage() {
+            isBossFightActive = false; 
+            console.log('startNextStage: isBossFightActive set to', isBossFightActive); 
+            clearGameElements(); 
+            
+            health = maxHealth; 
+            // Reseta variáveis do escudo (NOVO)
+            shieldActive = false;
+            shieldHealth = 0;
+            playerHealthBeforeShield = 0; // Reseta a vida guardada
+            shieldHealthBarContainer.classList.add('hidden'); // Esconde a barra do escudo
+            playerHealthBarContainer.classList.remove('hidden'); // Garante que a barra de vida do jogador esteja visível
+            player.classList.remove('player-shield-active'); // Remove o tint azul do player
+
+            // Reseta variáveis do Boss (NOVO)
+            bossRageActive = false;
+            lastBossPowerUpDropTime = 0;
+            isHeavyEnemyOnScreen = false; // Reseta a flag do heavy enemy
+            
+            updateHealthBarDisplay();
+            updatePlayerDamageDisplay();
+            playerLevelDisplay.textContent = playerLevel;
+            updateBossProgressBar(); // NOVO: Atualiza a barra de progresso do boss
+
+            currentEnemyMovementSpeed = baseEnemyMovementSpeed * (0.8 + (bossLevel * 0.1)); 
+            currentEnemyBulletSpeed = baseEnemyBulletSpeed * (1.4 + (bossLevel * 0.2)); 
+            objectSpawnInterval = Math.max(400, 1500 - (bossLevel * 100)); 
+            currentObstacleSpawnInterval = Math.max(1000, baseObstacleSpawnInterval - (bossLevel * 200)); 
+
+            currentStageHueRotation = (currentStageHueRotation + stageHueRotationIncrement) % 360;
+            gameContainer.style.filter = `hue-rotate(${currentStageHueRotation}deg)`;
+
+            stageClearScreen.classList.add('hidden'); 
+            gameRunning = true;
+            lastObjectSpawnTime = performance.now(); 
+            lastShotTime = performance.now(); 
+            lastObstacleSpawnTime = performance.now(); 
+            startGameLoop();
+
+            backgroundMusic.play().catch(e => console.log("Erro ao tentar tocar música:", e)); // Tenta tocar a música
+            bossMusic.pause(); // Garante que a música do boss não esteja tocando
+            bossMusic.currentTime = 0;
+        }
+
+        /**
+         * Limpa todos os elementos de jogo (inimigos, balas, coletáveis, etc.).
+         */
+        function clearGameElements() {
+            fallingObjects.forEach(obj => obj.remove());
+            fallingObjects = [];
+            bullets.forEach(bullet => bullet.remove());
+            bullets = [];
+            collectibles.forEach(col => col.remove());
+            collectibles = [];
+            enemyBullets.forEach(b => b.remove()); 
+            enemyBullets = [];
+            obstacles.forEach(o => o.remove()); 
+            obstacles = [];
+
+            if (boss) {
+                boss.remove();
+                boss = null;
+            }
+            const existingBossHealthBarWrapper = document.getElementById('bossHealthBarWrapper');
+            if (existingBossHealthBarWrapper) {
+                existingBossHealthBarWrapper.remove();
+            }
+            bossBullets.forEach(b => b.remove());
+            bossBullets = [];
+            console.log('clearGameElements called. isBossFightActive before removal:', isBossFightActive); 
+        }
+
+        /**
+         * Atualiza a posição do jogador.
+         */
+        function updatePlayerPosition() {
+            player.style.left = `${playerX}px`;
+            player.style.bottom = `${gameContainer.offsetHeight - playerY - player.offsetHeight}px`;
+        }
+
+        /**
+         * Verifica se dois retângulos se sobrepõem.
+         * @param {Object} rect1 - Primeiro retângulo {left, top, width, height}.
+         * @param {Object} rect2 - Segundo retângulo {left, top, width, height}.
+         * @returns {boolean} True se houver sobreposição, false caso contrário.
+         */
+        function isOverlapping(rect1, rect2) {
+            return rect1.left < rect2.left + rect2.width &&
+                   rect1.left + rect1.width > rect2.left &&
+                   rect1.top < rect2.top + rect2.height &&
+                   rect1.top + rect1.height > rect2.top;
+        }
+
+        /**
+         * Cria um novo objeto em caída (inimigo) com dificuldade variável.
+         * @param {DOMHighResTimeStamp} currentTime - O tempo atual.
+         * @param {boolean} [isBossSummon=false] - Indica se o inimigo está sendo sumonado pelo boss.
+         * @param {Object} [bossStats=null] - Contém {health, damage} do boss se for sumonado por ele.
+         */
+        function createFallingObject(currentTime, isBossSummon = false, bossStats = null) {
+            // Se já existe um heavy enemy na tela, e não é uma invocação do boss (que pode sobrescrever), não spawna.
+            // Ou se é uma invocação do boss e já tem um heavy enemy (invocado ou normal), não invoca.
+            if (isHeavyEnemyOnScreen && !isBossSummon) {
+                console.log("Heavy enemy already on screen (normal spawn attempt), skipping.");
+                return;
+            }
+            if (isBossSummon && isHeavyEnemyOnScreen) {
+                console.log("Boss attempted to summon heavy enemy, but one is already on screen, skipping.");
+                return;
+            }
+
+            const object = document.createElement('div');
+            object.classList.add('falling-object');
+            
+            let selectedEnemyType;
+            let isHeavyEnemy = false;
+            let spawned = false;
+            let maxAttempts = 10;
+
+            let tempLeft, tempTop, tempWidth, tempHeight; // Declare here to be accessible later
+
+            if (isBossSummon) {
+                selectedEnemyType = heavyEnemyDefinition;
+                isHeavyEnemy = true;
+                object.classList.add('heavy-enemy');
+                object.dataset.movementDirection = (Math.random() < 0.5 ? 1 : -1);
+                tempWidth = selectedEnemyType.width;
+                tempHeight = selectedEnemyType.height;
+                tempLeft = Math.random() * (gameContainer.offsetWidth - tempWidth);
+                tempTop = 50; // Spawna mais alto e permanece na tela
+
+                // Apply boss-scaled stats
+                // Ensure hits and damage are at least 1 to avoid division by zero or non-functional enemies
+                object.dataset.hitsRemaining = Math.max(1, Math.round(bossStats.health * 0.10)); // 10% da vida do boss
+                object.dataset.initialHits = Math.max(1, Math.round(bossStats.health * 0.10));
+                object.dataset.baseBulletDamage = Math.max(1, Math.round(bossStats.damage * 0.10)); // 10% do dano do boss
+                object.dataset.isBossSummoned = 'true'; // Marca como invocado pelo boss
+
+                const chosenHueIndex = Math.floor(Math.random() * selectedEnemyType.hueRotations.length);
+                selectedEnemyType.hueRotate = selectedEnemyType.hueRotations[chosenHueIndex];
+
+            } else if (bossLevel >= 1 && Math.random() < 0.075) { // Normal random heavy enemy spawn
+                selectedEnemyType = heavyEnemyDefinition;
+                isHeavyEnemy = true;
+                object.classList.add('heavy-enemy');
+                object.dataset.movementDirection = (Math.random() < 0.5 ? 1 : -1);
+                tempWidth = selectedEnemyType.width;
+                tempHeight = selectedEnemyType.height;
+                tempLeft = Math.random() * (gameContainer.offsetWidth - tempWidth);
+                tempTop = 50; // Spawna mais alto e permanece na tela
+
+                const chosenHueIndex = Math.floor(Math.random() * selectedEnemyType.hueRotations.length);
+                selectedEnemyType.hueRotate = selectedEnemyType.hueRotations[chosenHueIndex];
+
+            } else { // Normal enemy spawn
+                tempWidth = 60;
+                tempHeight = 60;
+                tempLeft = Math.random() * (gameContainer.offsetWidth - tempWidth);
+                tempTop = -tempHeight;
+
+                let availableEnemyLevels = [];
+                for (let j = 0; j < enemyTypes.length; j++) {
+                    if (score >= enemyTypes[j].scoreThreshold) {
+                        availableEnemyLevels.push(enemyTypes[j]);
+                    }
+                }
+
+                if (availableEnemyLevels.length === 0) {
+                    availableEnemyLevels.push(enemyTypes[0]);
+                }
+
+                const enemiesToSpawnFrom = availableEnemyLevels.slice(Math.max(0, availableEnemyLevels.length - 3));
+                selectedEnemyType = enemiesToSpawnFrom[Math.floor(Math.random() * enemiesToSpawnFrom.length)];
+            }
+
+            // Attempt to find a non-overlapping position
+            for (let i = 0; i < maxAttempts; i++) {
+                // If it's a heavy enemy, its position is fixed (top: 50px), so only randomize left
+                if (isHeavyEnemy) {
+                    tempLeft = Math.random() * (gameContainer.offsetWidth - tempWidth);
+                } else { // Normal enemy or obstacle, randomize both
+                    tempLeft = Math.random() * (gameContainer.offsetWidth - tempWidth);
+                    tempTop = -tempHeight;
+                }
+
+                const hypotheticalRect = {
+                    left: tempLeft,
+                    top: tempTop,
+                    width: tempWidth,
+                    height: tempHeight
+                };
+
+                let overlap = false;
+                // Check overlap with other falling objects (enemies)
+                for (const existingObj of fallingObjects) {
+                    const existingRect = {
+                        left: parseFloat(existingObj.style.left),
+                        top: parseFloat(existingObj.style.top),
+                        width: existingObj.offsetWidth,
+                        height: existingObj.offsetHeight
+                    };
+                    // Add a small padding to avoid very close spawns that might still overlap visually
+                    const padding = 5;
+                    if (isOverlapping(
+                        {left: hypotheticalRect.left - padding, top: hypotheticalRect.top - padding, width: hypotheticalRect.width + padding*2, height: hypotheticalRect.height + padding*2},
+                        {left: existingRect.left - padding, top: existingRect.top - padding, width: existingRect.width + padding*2, height: existingRect.height + padding*2}
+                    )) {
+                        overlap = true;
+                        break;
+                    }
+                }
+                // Check overlap with obstacles
+                if (!overlap) {
+                    for (const existingObstacle of obstacles) {
+                        const existingRect = {
+                            left: parseFloat(existingObstacle.style.left),
+                            top: parseFloat(existingObstacle.style.top),
+                            width: existingObstacle.offsetWidth,
+                            height: existingObstacle.offsetHeight
+                        };
+                        const padding = 5;
+                        if (isOverlapping(
+                            {left: hypotheticalRect.left - padding, top: hypotheticalRect.top - padding, width: hypotheticalRect.width + padding*2, height: hypotheticalRect.height + padding*2},
+                            {left: existingRect.left - padding, top: existingRect.top - padding, width: existingRect.width + padding*2, height: existingRect.height + padding*2}
+                        )) {
+                            overlap = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!overlap) {
+                    object.style.left = `${tempLeft}px`;
+                    object.style.top = `${tempTop}px`;
+                    object.style.width = `${tempWidth}px`;
+                    object.style.height = `${tempHeight}px`;
+                    spawned = true;
+                    break;
+                }
+            }
+
+            if (!spawned) {
+                console.warn("Não foi possível spawnar inimigo sem sobreposição após tentativas.");
+                return; // Não spawna o inimigo se não encontrar posição
+            }
+
+            // Apply scaling for normal enemies (heavy enemies have their hits set directly if boss-summoned)
+            if (!isBossSummon) {
+                const strengthMultiplier = 1 + (bossLevel * 0.25);
+                const additionalHeavyStrength = isHeavyEnemy && Math.random() < 0.1 ? 1.1 : 1;
+                object.dataset.hitsRemaining = selectedEnemyType.hits * strengthMultiplier * additionalHeavyStrength;
+                object.dataset.initialHits = selectedEnemyType.hits * strengthMultiplier * additionalHeavyStrength;
+                // For normal heavy enemies, baseBulletDamage is from heavyEnemyDefinition
+                object.dataset.baseBulletDamage = selectedEnemyType.baseBulletDamage;
+            } else {
+                // For boss summoned, hitsRemaining and initialHits are already set above.
+                // For boss summoned, baseBulletDamage is also set above.
+            }
+            // Ensure they are integers.
+            object.dataset.hitsRemaining = Math.round(object.dataset.hitsRemaining);
+            object.dataset.initialHits = Math.round(object.dataset.initialHits);
+            object.dataset.baseBulletDamage = Math.round(object.dataset.baseBulletDamage); // Ensure integer damage
+            
+            object.style.backgroundImage = `url('${selectedEnemyType.sprite}')`;
+            object.style.backgroundColor = 'transparent';
+            object.style.backgroundSize = 'contain';
+            object.style.backgroundRepeat = 'no-repeat';
+            object.style.backgroundPosition = 'center';
+            object.style.filter = `hue-rotate(${selectedEnemyType.hueRotate}deg)`;
+
+            const enemyHealthBarWrapper = document.createElement('div');
+            enemyHealthBarWrapper.classList.add('enemy-health-bar-wrapper');
+            const enemyHealthBar = document.createElement('div');
+            enemyHealthBar.classList.add('enemy-health-bar');
+            const enemyHealthFill = document.createElement('div');
+            enemyHealthFill.classList.add('enemy-health-fill');
+            enemyHealthBar.appendChild(enemyHealthFill);
+            enemyHealthBarWrapper.appendChild(enemyHealthBar);
+            object.appendChild(enemyHealthBarWrapper);
+
+            object.dataset.hasShot = 'false';
+            object.dataset.shootTimer = currentTime + (isHeavyEnemy ? selectedEnemyType.shootInterval : 1000);
+            object.dataset.shootType = isHeavyEnemy ? 'straight' : (Math.random() < 0.5 ? 'straight' : 'diagonal');
+            object.dataset.isHeavy = isHeavyEnemy;
+
+            gameContainer.appendChild(object);
+            fallingObjects.push(object);
+
+            // Set the global flag if a heavy enemy was successfully spawned
+            if (isHeavyEnemy) {
+                isHeavyEnemyOnScreen = true;
+                console.log("Heavy enemy spawned. isHeavyEnemyOnScreen = true");
+            }
+        }
+
+        /**
+         * Cria uma nova bala do jogador.
+         */
+        function createBullet() {
+            const bulletBottom = gameContainer.offsetHeight - playerY - player.offsetHeight + 10;
+            const bulletWidth = 8; 
+            const bulletHeight = 20; 
+
+            const createSingleBullet = (xOffset, initialDx) => {
+                const bullet = document.createElement('div');
+                bullet.classList.add('bullet');
+                bullet.style.left = `${playerX + player.offsetWidth / 2 - bulletWidth / 2 + xOffset}px`;
+                bullet.style.bottom = `${bulletBottom}px`; 
+                
+                let dx = initialDx;
+                bullet.dataset.dx = dx;
+                bullet.dataset.dy = bulletSpeed; 
+                gameContainer.appendChild(bullet);
+                bullets.push(bullet);
+                playerShotSound.currentTime = 0; // Rewind to start
+                playerShotSound.play().catch(e => console.log("Erro ao tocar som de tiro do player:", e));
+            };
+
+            createSingleBullet(0, 0); // Tiro central
+
+            if (sideShotsLevel >= 1) { // Nível 1 de tiros laterais (total 3 tiros)
+                createSingleBullet(-15, 0); // Tiro lateral esquerdo 1
+                createSingleBullet(15, 0);  // Tiro lateral direito 1
+            }
+            if (sideShotsLevel >= 2) { // Nível 2 de tiros laterais (total 5 tiros)
+                createSingleBullet(-30, 0); // Tiro lateral esquerdo 2
+                createSingleBullet(30, 0);  // Tiro lateral direito 2
+            }
+
+            if (slantedBulletsActive) { // Tiros inclinados (ainda separados)
+                createSingleBullet(-20, -2); 
+                createSingleBullet(20, 2);  
+            }
+        }
+
+        /**
+         * Converte um valor hexadecimal de cor para RGBA.
+         * @param {string} hex - A cor em formato hexadecimal (ex: '#RRGGBB' ou '#RGB').
+         * @param {number} alpha - O valor do canal alfa (0 a 1).
+         * @returns {string} A cor em formato RGBA (ex: 'rgba(255, 0, 0, 0.7)').
+         */
+        function hexToRgba(hex, alpha = 1) {
+            let r = 0, g = 0, b = 0;
+            // Handle 3-digit hex
+            if (hex.length === 4) {
+                r = parseInt(hex[1] + hex[1], 16);
+                g = parseInt(hex[2] + hex[2], 16);
+                b = parseInt(hex[3] + hex[3], 16);
+            }
+            // Handle 6-digit hex
+            else if (hex.length === 7) {
+                r = parseInt(hex.substring(1, 3), 16);
+                g = parseInt(hex.substring(3, 5), 16);
+                b = parseInt(hex.substring(5, 7), 16);
+            }
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+
+        /**
+         * Cria um coletável (power-up ou debuff).
+         * @param {number} x - Posição X para spawnar o coletável.
+         * @param {number} y - Posição Y para spawnar o coletável.
+         * @param {DOMHighResTimeStamp} currentTime - O tempo atual.
+         * @param {string} [forcedType=null] - Tipo de power-up a ser forçado (ex: 'health_up').
+         */
+        function createCollectible(x, y, currentTime, forcedType = null) {
+            const collectible = document.createElement('div');
+            collectible.style.left = `${x}px`;
+            collectible.style.top = `${y}px`; 
+            collectible.dataset.spawnTime = currentTime; 
+            collectible.dataset.isStationary = 'true'; 
+
+            let selectedCollectibleType;
+
+            if (forcedType) { // Se um tipo for forçado (ex: por inimigo pesado)
+                selectedCollectibleType = [...powerUpTypes, healthPowerUpType, debuffType].find(type => type.type === forcedType);
+                if (!selectedCollectibleType) { // Fallback se o tipo forçado for inválido
+                    selectedCollectibleType = powerUpTypes[0]; // Padrão para o primeiro power-up
+                }
+            } else { // Lógica de drop aleatório normal
+                const healthDropProbability = 0.30; // 30% de todos os drops são vida
+                const debuffDropProbability = 0.10; // 10% de todos os drops são debuffs
+                const rand = Math.random();
+
+                if (rand < healthDropProbability) { 
+                    selectedCollectibleType = healthPowerUpType;
+                } else if (rand < healthDropProbability + debuffDropProbability) { 
+                    selectedCollectibleType = debuffType;
+                } else { 
+                    const otherPowerUps = powerUpTypes.filter(type => type.type !== 'health_up' && type.type !== 'damage_down' && type.type !== 'shield'); 
+                    selectedCollectibleType = otherPowerUps[Math.floor(Math.random() * otherPowerUps.length)];
+                }
+            }
+            
+            collectible.dataset.type = selectedCollectibleType.type; 
+            // Adiciona classes com base no tipo selecionado
+            if (selectedCollectibleType.type === 'debuff') {
+                collectible.classList.add('debuff');
+            } else if (selectedCollectibleType.type === 'health_up') {
+                collectible.classList.add('power-up', 'health-up');
+            } else if (selectedCollectibleType.type === 'shield') { // NOVO: Classe para escudo
+                collectible.classList.add('power-up', 'shield');
+            }
+            else {
+                collectible.classList.add('power-up');
+                if (selectedCollectibleType.type === 'side_bullets') {
+                    collectible.classList.add('side-bullets');
+                } else if (selectedCollectibleType.type === 'slanted_bullets') {
+                    collectible.classList.add('slanted-bullets');
+                } 
+            }
+            collectible.style.backgroundImage = `url('${selectedCollectibleType.sprite}')`; 
+            collectible.style.backgroundColor = 'transparent'; 
+            collectible.style.backgroundSize = 'contain';
+            collectible.style.backgroundRepeat = 'no-repeat';
+            collectible.style.backgroundPosition = 'center';
+            collectible.innerHTML = ''; 
+
+            // Aplica o brilho correspondente à cor
+            collectible.style.boxShadow = `0 0 8px 3px ${hexToRgba(selectedCollectibleType.color, 0.9)}`;
+            // Aplica o filtro de cor da imagem e o filtro inverso do cenário
+            collectible.style.filter = `hue-rotate(${selectedCollectibleType.hueRotate}deg) hue-rotate(${-currentStageHueRotation}deg)`;
+
+            gameContainer.appendChild(collectible);
+            collectibles.push(collectible);
+        }
+
+        /**
+         * Cria um obstáculo.
+         */
+        function createObstacle() {
+            const obstacle = document.createElement('div');
+            obstacle.classList.add('obstacle');
+            
+            const baseSize = 45;
+            let tempWidth = baseSize + Math.random() * baseSize; 
+            let tempHeight = tempWidth; // Obstáculos são quadrados
+            let spawned = false;
+            let maxAttempts = 10;
+
+            for (let i = 0; i < maxAttempts; i++) {
+                let tempLeft = Math.random() * (gameContainer.offsetWidth - tempWidth); 
+                let tempTop = -tempHeight; // Começa acima da tela
+
+                const hypotheticalRect = {
+                    left: tempLeft,
+                    top: tempTop,
+                    width: tempWidth,
+                    height: tempHeight
+                };
+
+                let overlap = false;
+                // Verifica sobreposição com outros obstáculos
+                for (const existingObstacle of obstacles) {
+                    const existingRect = {
+                        left: parseFloat(existingObstacle.style.left),
+                        top: parseFloat(existingObstacle.style.top),
+                        width: existingObstacle.offsetWidth,
+                        height: existingObstacle.offsetHeight
+                    };
+                    if (isOverlapping(hypotheticalRect, existingRect)) {
+                        overlap = true;
+                        break;
+                    }
+                }
+                // Verifica sobreposição com inimigos
+                if (!overlap) {
+                    for (const existingObj of fallingObjects) {
+                        const existingRect = {
+                            left: parseFloat(existingObj.style.left),
+                            top: parseFloat(existingObj.style.top),
+                            width: existingObj.offsetWidth,
+                            height: existingObj.offsetHeight
+                        };
+                        if (isOverlapping(hypotheticalRect, existingRect)) {
+                            overlap = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!overlap) {
+                    obstacle.style.left = `${tempLeft}px`;
+                    obstacle.style.top = `${tempTop}px`;
+                    obstacle.style.width = `${tempWidth}px`;
+                    obstacle.style.height = `${tempHeight}px`;
+                    spawned = true;
+                    break;
+                }
+            }
+
+            if (!spawned) {
+                console.warn("Não foi possível spawnar obstáculo sem sobreposição após tentativas.");
+                return; // Não spawna o obstáculo se não encontrar posição
+            }
+
+            const randomHue = Math.floor(Math.random() * 360);
+            obstacle.style.filter = `hue-rotate(${randomHue}deg)`;
+
+            gameContainer.appendChild(obstacle);
+            obstacles.push(obstacle);
+        }
+
+        /**
+         * Cria um projétil de um inimigo normal ou pesado.
+         * @param {HTMLElement} enemyObject - O elemento DOM do inimigo que está atirando.
+         * @param {boolean} [isHeavyBullet=false] - Indica se é uma bala de inimigo pesado.
+         */
+        function createEnemyBullet(enemyObject, isHeavyBullet = false) {
+            const enemyBullet = document.createElement('div');
+            enemyBullet.classList.add('enemy-bullet');
+            if (isHeavyBullet) {
+                enemyBullet.classList.add('heavy-enemy-bullet'); // Adiciona classe específica para bala de inimigo pesado
+                enemyBullet.classList.add('heavy-enemy-bullet-color'); // Adiciona classe de cor para bala pesada
+            } else {
+                enemyBullet.classList.add('enemy-bullet-color'); // Adiciona classe de cor para bala normal
+            }
+            let enemyLeft = parseFloat(enemyObject.style.left);
+            if (isNaN(enemyLeft)) { enemyLeft = 0; enemyObject.style.left = `${enemyLeft}px`; }
+            let enemyTop = parseFloat(enemyObject.style.top);
+            if (isNaN(enemyTop)) { enemyTop = -60; enemyObject.style.top = `${enemyTop}px`; }
+
+            const bulletSize = isHeavyBullet ? 20 : 12; // Tamanho diferente para bala pesada
+            enemyBullet.style.left = `${enemyLeft + (enemyObject.offsetWidth / 2) - (bulletSize / 2)}px`;
+            enemyBullet.style.top = `${enemyTop + enemyObject.offsetHeight}px`;
+            
+            let dx = 0;
+            let dy = isHeavyBullet ? heavyEnemyDefinition.speed * 2 : currentEnemyBulletSpeed; // Velocidade da bala do inimigo pesado
+
+            if (!isHeavyBullet && enemyObject.dataset.shootType === 'diagonal') { // Apenas inimigos normais atiram diagonal
+                dx = (Math.random() < 0.5 ? -1 : 1) * (currentEnemyBulletSpeed * 0.5); 
+                dy = currentEnemyBulletSpeed * 0.866; 
+            }
+            enemyBullet.dataset.dx = dx;
+            enemyBullet.dataset.dy = dy;
+            enemyBullet.dataset.isHeavyBullet = isHeavyBullet; // Marca o tipo da bala
+
+            gameContainer.appendChild(enemyBullet);
+            enemyBullets.push(enemyBullet);
+            enemyShotSound.currentTime = 0; // Rewind to start
+            enemyShotSound.play().catch(e => console.log("Erro ao tocar som de tiro do inimigo:", e));
+        }
+
+        /**
+         * Atualiza a posição dos objetos em queda e seus estados.
+         * Inimigos que passam não causam perda de vida.
+         * @param {DOMHighResTimeStamp} currentTime - O tempo atual.
+         */
+        function updateFallingObjects(currentTime) {
+            try {
+                for (let i = 0; i < fallingObjects.length; i++) {
+                    const object = fallingObjects[i];
+                    let currentTop = parseFloat(object.style.top);
+                    let currentLeft = parseFloat(object.style.left); // Pega a posição horizontal
+
+                    if (isNaN(currentTop)) { currentTop = 0; object.style.top = `${currentTop}px`; }
+                    if (isNaN(currentLeft)) { currentLeft = 0; object.style.left = `${currentLeft}px`; } // Inicializa se for NaN
+
+                    if (object.dataset.isHeavy === 'true') {
+                        // Movimento horizontal do inimigo pesado
+                        let direction = parseFloat(object.dataset.movementDirection);
+                        currentLeft += direction * heavyEnemyDefinition.speed; // Usa a velocidade do inimigo pesado
+
+                        // Ricochete nas paredes laterais para inimigo pesado
+                        if (currentLeft <= 0 || currentLeft + object.offsetWidth >= gameContainer.offsetWidth) {
+                            direction *= -1;
+                            object.dataset.movementDirection = direction;
+                            currentLeft = Math.max(0, Math.min(currentLeft, gameContainer.offsetWidth - object.offsetWidth)); // Garante que não saia da tela
+                        }
+                        object.style.left = `${currentLeft}px`;
+
+                        // Tiro do inimigo pesado
+                        if (currentTime >= parseFloat(object.dataset.shootTimer)) {
+                            createEnemyBullet(object, true); // Atira bala pesada
+                            object.dataset.shootTimer = currentTime + heavyEnemyDefinition.shootInterval; // Reseta timer
+                        }
+                        // Inimigos pesados não são removidos por sair da tela por baixo
+                    } else {
+                        // Movimento vertical do inimigo normal
+                        object.style.top = `${currentTop + currentEnemyMovementSpeed}px`;
+
+                        if (object.dataset.hasShot === 'false' && currentTime >= parseFloat(object.dataset.shootTimer)) {
+                            createEnemyBullet(object, false); // Atira bala normal
+                            object.dataset.hasShot = 'true';
+                        }
+
+                        if (currentTop > gameContainer.offsetHeight) {
+                            object.remove();
+                            fallingObjects.splice(i, 1);
+                            i--;
+                            continue;
+                        }
+                    }
+
+                    const enemyHealthBarWrapper = object.querySelector('.enemy-health-bar-wrapper');
+                    if (enemyHealthBarWrapper) {
+                        // Ajusta a posição da barra de vida para inimigos pesados (maior sprite)
+                        if (object.dataset.isHeavy === 'true') {
+                            enemyHealthBarWrapper.style.top = `${-20}px`; 
+                        } else {
+                            enemyHealthBarWrapper.style.top = `${-15}px`;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error("Erro em updateFallingObjects:", error);
+            }
+        }
+
+        /**
+         * Atualiza a posição das balas do jogador e verifica colisões com objetos em queda.
+         */
+        function updateBullets() {
+            try {
+                for (let i = 0; i < bullets.length; i++) {
+                    const bullet = bullets[i];
+                    let currentBottom = parseFloat(bullet.style.bottom);
+                    if (isNaN(currentBottom)) { currentBottom = 0; bullet.style.bottom = `${currentBottom}px`; }
+                    let currentLeft = parseFloat(bullet.style.left);
+                    if (isNaN(currentLeft)) { currentLeft = 0; bullet.style.left = `${currentLeft}px`; }
+                    let dx = parseFloat(bullet.dataset.dx);
+                    if (isNaN(dx)) { dx = 0; }
+                    let dy = parseFloat(bullet.dataset.dy);
+                    if (isNaN(dy)) { dy = 0; }
+
+                    currentBottom += dy;
+                    currentLeft += dx;
+
+                    bullet.style.bottom = `${currentBottom}px`;
+                    bullet.style.left = `${currentLeft}px`;
+
+                    if (currentBottom > gameContainer.offsetHeight || currentBottom < -bullet.offsetHeight) {
+                        bullet.remove();
+                        bullets.splice(i, 1);
+                        i--; 
+                        continue; 
+                    }
+
+                    if (isBossFightActive && boss) {
+                        const bulletRect = bullet.getBoundingClientRect();
+                        const bossRect = boss.getBoundingClientRect();
+
+                        if (
+                            bulletRect.bottom > bossRect.top &&
+                            bulletRect.top < bossRect.bottom &&
+                            bulletRect.right > bossRect.left &&
+                            bulletRect.left < bossRect.right
+                        ) {
+                            bullet.remove();
+                            bullets.splice(i, 1);
+                            i--;
+                            
+                            bossHealth = Math.max(0, bossHealth - bulletDamage);
+                            updateBossHealthBar();
+                            if (bossHealth <= 0) {
+                                handleBossDefeated(); // Chama a nova função
+                                return; 
+                            }
+                            continue; 
+                        }
+                    }
+
+                    if (!isBossFightActive) {
+                        const bulletRect = bullet.getBoundingClientRect();
+                        for (let j = 0; j < fallingObjects.length; j++) {
+                            const object = fallingObjects[j];
+                            const objectRect = object.getBoundingClientRect();
+
+                            if (
+                                bulletRect.bottom > objectRect.top &&
+                                bulletRect.top < objectRect.bottom &&
+                                bulletRect.right > objectRect.left &&
+                                bulletRect.left < objectRect.right
+                            ) {
+                                bullet.remove(); // Se não há ricochete, a bala é removida
+                                bullets.splice(i, 1);
+                                i--; 
+                                
+
+                                let hitsRemaining = parseInt(object.dataset.hitsRemaining);
+                                hitsRemaining -= bulletDamage; 
+                                object.dataset.hitsRemaining = hitsRemaining;
+
+                                const enemyHealthFill = object.querySelector('.enemy-health-fill');
+                                if (enemyHealthFill) {
+                                    const healthPercentage = (hitsRemaining / parseInt(object.dataset.initialHits)) * 100;
+                                    enemyHealthFill.style.width = `${healthPercentage}%`;
+                                    if (healthPercentage > 60) {
+                                        enemyHealthFill.style.backgroundColor = '#48bb78'; 
+                                    } else if (healthPercentage > 30) {
+                                        enemyHealthFill.style.backgroundColor = '#f6ad55'; 
+                                    } else {
+                                        enemyHealthFill.style.backgroundColor = '#e53e3e'; 
+                                    }
+                                }
+
+                                if (hitsRemaining > 0) {
+                                    object.classList.add('enemy-hit-effect');
+                                    setTimeout(() => {
+                                        object.classList.remove('enemy-hit-effect');
+                                    }, 100); 
+                                } else {
+                                    object.remove();
+                                    fallingObjects.splice(j, 1);
+                                    j--; 
+                                    
+                                    // NOVO: Pontuação do Heavy Enemy
+                                    if (object.dataset.isHeavy === 'true') {
+                                        isHeavyEnemyOnScreen = false; // Heavy enemy defeated
+                                        console.log("Heavy enemy defeated. isHeavyEnemyOnScreen = false");
+                                        score += 10; // Heavy enemy gives 10 points
+                                        const gameRect = gameContainer.getBoundingClientRect();
+                                        // Força um power-up positivo (dano ou vida)
+                                        const positivePowerUps = powerUpTypes.filter(type => type.type !== 'damage_down');
+                                        const forcedPowerUp = positivePowerUps[Math.floor(Math.random() * positivePowerUps.length)];
+                                        createCollectible(objectRect.left - gameRect.left, objectRect.top - gameRect.top, performance.now(), forcedPowerUp.type);
+                                    } else {
+                                        score++; // Normal enemy gives 1 point
+                                        if (Math.random() < collectibleDropChance) { // Chance de drop para inimigos normais
+                                            const gameRect = gameContainer.getBoundingClientRect(); 
+                                            createCollectible(objectRect.left - gameRect.left, objectRect.top - gameRect.top, performance.now()); 
+                                        }
+                                    }
+                                    scoreValueDisplay.textContent = score; 
+                                    increaseDifficulty(); 
+                                }
+                                if (bullet.parentNode === null) break; 
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error("Erro em updateBullets:", error);
+            }
+        }
+
+        /**
+         * Atualiza a posição dos coletáveis e verifica colisões com o jogador.
+         * @param {DOMHighResTimeStamp} currentTime - O tempo atual.
+         */
+        function updateCollectibles(currentTime) {
+            try {
+                for (let i = 0; i < collectibles.length; i++) {
+                    const collectible = collectibles[i];
+                    let currentTop = parseFloat(collectible.style.top);
+                    if (isNaN(currentTop)) {
+                        currentTop = 0; 
+                        collectible.style.top = `${currentTop}px`;
+                    }
+
+                    if (collectible.dataset.isStationary === 'true') {
+                        if (currentTime - parseFloat(collectible.dataset.spawnTime) > collectibleStationaryDuration) {
+                            collectible.dataset.isStationary = 'false'; 
+                        }
+                    } else {
+                        collectible.style.top = `${currentTop + currentEnemyMovementSpeed}px`;
+                    }
+
+                    if (currentTop > gameContainer.offsetHeight) {
+                        collectible.remove();
+                        collectibles.splice(i, 1);
+                        i--;
+                        continue;
+                    }
+
+                    const playerRect = player.getBoundingClientRect();
+                    const collectibleRect = collectible.getBoundingClientRect();
+
+                    if (
+                        collectibleRect.bottom > playerRect.top &&
+                        collectibleRect.top < playerRect.bottom &&
+                        collectibleRect.right > playerRect.left &&
+                        collectibleRect.left < playerRect.right
+                    ) {
+                        if (collectible.classList.contains('power-up')) {
+                            collectPowerUp(collectible);
+                        } else if (collectible.classList.contains('debuff')) {
+                            collectDebuff(collectible);
+                        }
+                        collectible.remove();
+                        collectibles.splice(i, 1);
+                        i--;
+                        return; 
+                    }
+                }
+            } catch (error) {
+                console.error("Erro em updateCollectibles:", error);
+            }
+        }
+
+        /**
+         * Atualiza a posição dos projéteis inimigos e verifica colisões com o jogador.
+         */
+        function updateEnemyBullets() {
+            try {
+                for (let i = 0; i < enemyBullets.length; i++) {
+                    const eBullet = enemyBullets[i];
+                    let currentTop = parseFloat(eBullet.style.top);
+                    if (isNaN(currentTop)) { currentTop = 0; eBullet.style.top = `${currentTop}px`; }
+                    let currentLeft = parseFloat(eBullet.style.left);
+                    if (isNaN(currentLeft)) { currentLeft = 0; eBullet.style.left = `${currentLeft}px`; }
+                    let dx = parseFloat(eBullet.dataset.dx);
+                    if (isNaN(dx)) { dx = 0; }
+                    let dy = parseFloat(eBullet.dataset.dy);
+                    if (isNaN(dy)) { dy = 0; }
+
+                    currentTop += dy;
+                    currentLeft += dx;
+
+                    eBullet.style.top = `${currentTop}px`;
+                    eBullet.style.left = `${currentLeft}px`;
+
+                    if (currentTop > gameContainer.offsetHeight || currentLeft < -eBullet.offsetWidth || currentLeft > gameContainer.offsetWidth) {
+                        eBullet.remove();
+                        enemyBullets.splice(i, 1);
+                        i--;
+                        continue;
+                    }
+
+                    const playerRect = player.getBoundingClientRect();
+                    const eBulletRect = eBullet.getBoundingClientRect();
+
+                    if (
+                        eBulletRect.bottom > playerRect.top &&
+                        eBulletRect.top < playerRect.bottom &&
+                        eBulletRect.right > playerRect.left &&
+                        eBulletRect.left < playerRect.right
+                    ) {
+                        eBullet.remove();
+                        enemyBullets.splice(i, 1);
+                        i--;
+
+                        // Aplica dano com base no tipo da bala inimiga e escalonamento por nível do boss
+                        const damageMultiplier = 1 + (bossLevel * 0.10); // 10% mais forte em dano por nível de boss
+                        const damageToApply = (eBullet.dataset.isHeavyBullet === 'true' ? parseFloat(eBullet.dataset.baseBulletDamage) : baseEnemyBulletDamage) * damageMultiplier; 
+                        
+                        // Lógica de dano ao escudo (NOVO)
+                        if (shieldActive && shieldHealth > 0) {
+                            shieldHealth -= damageToApply;
+                            if (shieldHealth <= 0) {
+                                const remainingDamage = Math.abs(shieldHealth); // Dano que sobrou após zerar o escudo
+                                deactivateShield(); // Desativa o escudo
+                                health = Math.max(0, playerHealthBeforeShield - remainingDamage); // Aplica o dano restante à vida normal
+                            }
+                        } else {
+                            health = Math.max(0, health - damageToApply); 
+                        }
+                        
+                        updateHealthBarDisplay();
+                        console.log("Atingido por inimigo! Vida restante: " + health + ", Escudo: " + shieldHealth);
+                        if (health <= 0) {
+                            showGameOverScreen(); // Chama a função de game over
+                            return;
+                        }
+                        player.classList.add('player-hit-effect');
+                        setTimeout(() => {
+                            player.classList.remove('player-hit-effect');
+                        }, 150); 
+                    }
+                }
+            } catch (error) {
+                console.error("Erro em updateEnemyBullets:", error);
+            }
+        }
+
+        /**
+         * Atualiza a posição dos obstáculos e verifica colisões com o jogador.
+         */
+        function updateObstacles() {
+            try {
+                for (let i = 0; i < obstacles.length; i++) {
+                    const obstacle = obstacles[i];
+                    let currentTop = parseFloat(obstacle.style.top);
+                    if (isNaN(currentTop)) {
+                        currentTop = -45; 
+                        obstacle.style.top = `${currentTop}px`; 
+                    }
+                    obstacle.style.top = `${currentTop + currentEnemyMovementSpeed}px`; 
+
+                    if (currentTop > gameContainer.offsetHeight) {
+                        obstacle.remove();
+                        obstacles.splice(i, 1);
+                        i--;
+                        continue;
+                    }
+
+                    const playerRect = player.getBoundingClientRect();
+                    const obstacleRect = obstacle.getBoundingClientRect();
+
+                    if (
+                        obstacleRect.bottom > playerRect.top &&
+                        obstacleRect.top < playerRect.bottom &&
+                        obstacleRect.right > playerRect.left &&
+                        obstacleRect.left < playerRect.right
+                    ) {
+                        obstacle.remove();
+                        obstacles.splice(i, 1);
+                        i--;
+
+                        // Lógica de dano ao escudo (NOVO)
+                        if (shieldActive && shieldHealth > 0) {
+                            shieldHealth -= obstacleDamage;
+                            if (shieldHealth <= 0) {
+                                const remainingDamage = Math.abs(shieldHealth); // Dano que sobrou após zerar o escudo
+                                deactivateShield(); // Desativa o escudo
+                                health = Math.max(0, playerHealthBeforeShield - remainingDamage); // Aplica o dano restante à vida normal
+                            }
+                        } else {
+                            health = Math.max(0, health - obstacleDamage); 
+                        }
+
+                        updateHealthBarDisplay();
+                        console.log("Atingido por obstáculo! Vida restante: " + health + ", Escudo: " + shieldHealth);
+                        if (health <= 0) {
+                            showGameOverScreen(); // Chama a função de game over
+                            return;
+                        }
+                        player.classList.add('player-hit-effect');
+                        setTimeout(() => {
+                            player.classList.remove('player-hit-effect'); 
+                        }, 150); 
+                    }
+                }
+            } catch (error) {
+                console.error("Erro em updateObstacles:", error);
+            }
+        }
+
+        /**
+         * Aumenta a dificuldade do jogo.
+         */
+        function increaseDifficulty() {
+            // Inicia a batalha contra o boss a cada `nextBossScoreThreshold` pontos
+            if (score >= nextBossScoreThreshold && !isBossFightActive) {
+                startBossFight(); 
+            }
+        }
+
+        /**
+         * Função para coletar um power-up.
+         * @param {HTMLElement} powerUp - O elemento DOM do power-up coletado.
+         */
+        function collectPowerUp(powerUp) {
+            const type = powerUp.dataset.type;
+            console.log(`Power-up coletado: ${type}`); 
+
+            if (type === 'damage_1') {
+                bulletDamage = Math.max(1, bulletDamage + 1); 
+                console.log("Power-up de dano +1! Dano atual: " + bulletDamage);
+            } else if (type === 'side_bullets') {
+                sideShotsLevel = Math.min(2, sideShotsLevel + 1); // Aumenta o nível de tiros laterais
+                console.log("Power-up de tiros laterais ativado! Nível: " + sideShotsLevel);
+            } else if (type === 'health_up') {
+                health = Math.min(maxHealth, health + healthPowerUpType.healthIncrease); 
+                updateHealthBarDisplay();
+                console.log("Power-up de vida coletado! Vida atual: " + health);
+            } else if (type === 'shield') { // NOVO: Coleta do power-up de escudo
+                if (!shieldActive) { // Se o escudo não estava ativo, guarda a vida atual
+                    playerHealthBeforeShield = health;
+                    player.classList.add('player-shield-active'); // Aplica o tint azul ao player
+                    playerHealthBarContainer.classList.add('hidden'); // Oculta a barra de vida do jogador
+                    shieldHealthBarContainer.classList.remove('hidden'); // Exibe a barra de vida do escudo
+                }
+                shieldHealth = maxShieldHealth; // Preenche a vida do escudo para o máximo
+                shieldActive = true; // Ativa o escudo
+                console.log("Power-up de escudo coletado! Vida do escudo: " + shieldHealth + ", Vida do jogador antes do escudo: " + playerHealthBeforeShield);
+            }
+            updatePlayerDamageDisplay();
+            updateHealthBarDisplay(); // Atualiza a exibição das barras de vida
+        }
+
+        /**
+         * Função para coletar um debuff.
+         * @param {HTMLElement} debuff - O elemento DOM do debuff coletado.
+         */
+        function collectDebuff(debuff) {
+            const type = debuff.dataset.type;
+            console.log(`Debuff coletado: ${type}`); 
+
+            if (type === 'damage_down') {
+                bulletDamage = Math.max(1, bulletDamage - 1); // Apenas reduz o dano em 1
+                sideShotsLevel = Math.max(0, sideShotsLevel - 1); // Reduz o nível de tiros laterais
+                slantedBulletsActive = false; // Desativa tiros inclinados
+                console.log("Debuff de dano -1! Dano atual: " + bulletDamage + ". Tiros laterais Nível: " + sideShotsLevel); 
+            }
+            updatePlayerDamageDisplay();
+        }
+
+        /**
+         * Desativa o escudo do jogador (NOVO).
+         */
+        function deactivateShield() {
+            shieldActive = false;
+            shieldHealth = 0;
+            shieldHealthBarContainer.classList.add('hidden'); // Esconde a barra do escudo
+            playerHealthBarContainer.classList.remove('hidden'); // Reexibe a barra de vida do jogador
+            player.classList.remove('player-shield-active'); // Remove o tint azul do player
+            console.log("Escudo desativado! Vida do jogador restaurada para: " + health);
+            updateHealthBarDisplay(); // Atualiza a exibição das barras de vida
+        }
+
+        /**
+         * Atualiza a exibição de dano do jogador (na barra de status).
+         */
+        function updatePlayerDamageDisplay() {
+            if (playerDamageDisplay) {
+                let damageText = `${bulletDamage}`;
+                if (slantedBulletsActive) damageText += ` (//)`;
+                if (sideShotsLevel > 0) damageText += ` (S${sideShotsLevel})`; // Exibe nível de tiros laterais
+                
+                playerDamageDisplay.textContent = damageText;
+            }
+        }
+
+        /**
+         * Atualiza a barra de vida do jogador (agora com suporte a escudo).
+         */
+        function updateHealthBarDisplay() {
+            if (healthFill && shieldHealthFill) { // Garante que ambos os elementos existam
+                if (shieldActive) {
+                    // Exibe a barra de escudo e oculta a do jogador
+                    playerHealthBarContainer.classList.add('hidden');
+                    shieldHealthBarContainer.classList.remove('hidden');
+
+                    const shieldPercentage = (shieldHealth / maxShieldHealth) * 100;
+                    shieldHealthFill.style.width = `${shieldPercentage}%`;
+                    shieldHealthText.textContent = `${Math.round(shieldHealth)} / ${maxShieldHealth}`;
+                    // A cor da barra de escudo já é azul por CSS
+                } else {
+                    // Exibe a barra do jogador e oculta a do escudo
+                    playerHealthBarContainer.classList.remove('hidden');
+                    shieldHealthBarContainer.classList.add('hidden');
+
+                    const healthPercentage = (health / maxHealth) * 100;
+                    healthFill.style.width = `${healthPercentage}%`;
+                    // Muda a cor da barra de vida conforme a vida diminui
+                    if (healthPercentage > 60) {
+                        healthFill.style.backgroundColor = '#48bb78'; 
+                    } else if (healthPercentage > 30) {
+                        healthFill.style.backgroundColor = '#f6ad55'; 
+                    } else {
+                        healthFill.style.backgroundColor = '#e53e3e'; 
+                    }
+                    playerHealthText.textContent = `${Math.round(health)} / ${maxHealth}`; 
+                }
+            }
+        }
+
+        /**
+         * Atualiza a barra de progresso do Boss (NOVO).
+         */
+        function updateBossProgressBar() {
+            const progress = Math.min(score, nextBossScoreThreshold);
+            const progressPercentage = (progress / nextBossScoreThreshold) * 100;
+            bossProgressFill.style.width = `${progressPercentage}%`;
+            bossProgressText.textContent = `${score} / ${nextBossScoreThreshold}`;
+        }
+
+        /**
+         * Inicia a batalha contra o boss.
+         */
+        function startBossFight() {
+            console.log('startBossFight: Setting isBossFightActive = true'); // DEBUG
+            isBossFightActive = true;
+            clearGameElements(); // Limpa todos os inimigos, balas inimigas, obstáculos e coletáveis existentes
+            
+            // CORRIGIDO: Progressão de vida do boss reduzida em 25% (agora 3.75 ao invés de 5)
+            bossHealth = initialBossHealth * Math.pow(3.75, bossLevel); 
+            // Ajusta o dano da bala do boss para ter uma curva gradual
+            currentBossBulletDamage = initialBossBulletDamage * (1 + bossLevel * 0.10); // Aumento de 10% por nível
+            bossRageThreshold = bossHealth * 0.35; // NOVO: Define o limiar de raiva
+            bossRageActive = false; // NOVO: Reseta o modo de raiva
+            lastBossPowerUpDropTime = performance.now(); // NOVO: Inicia o timer de drop de power-ups do boss
+
+            console.log(`Boss Level: ${bossLevel}, Boss Health: ${bossHealth}, Boss Bullet Damage: ${currentBossBulletDamage}, Rage Threshold: ${bossRageThreshold}`); // DEBUG
+
+            createBoss();
+            lastBossShotTime = performance.now(); 
+
+            backgroundMusic.pause(); // Pausa a música de fundo normal
+            backgroundMusic.currentTime = 0; // Volta para o início para quando for retomada
+            bossMusic.play().catch(e => console.log("Erro ao tocar música do boss:", e)); // Toca a música do boss
+        }
+
+        /**
+         * Cria o elemento do boss.
+         */
+        function createBoss() {
+            boss = document.createElement('div');
+            boss.classList.add('boss');
+            boss.style.left = `${(gameContainer.offsetWidth / 2) - (100 / 2)}px`; 
+            boss.style.top = '50px'; 
+            const bossHue = bossHueRotations[bossLevel % bossHueRotations.length];
+            boss.style.filter = `hue-rotate(${bossHue}deg)`; 
+            gameContainer.appendChild(boss);
+
+            const bossHealthBarWrapper = document.createElement('div');
+            bossHealthBarWrapper.id = 'bossHealthBarWrapper'; 
+            bossHealthBarWrapper.classList.add('boss-health-bar-wrapper');
+            gameContainer.appendChild(bossHealthBarWrapper);
+
+            const healthBar = document.createElement('div');
+            healthBar.classList.add('boss-health-bar');
+            bossHealthBarWrapper.appendChild(healthBar);
+
+            const healthFillBoss = document.createElement('div'); 
+            healthFillBoss.classList.add('boss-health-fill');
+            healthBar.appendChild(healthFillBoss);
+
+            const bossHealthText = document.createElement('span'); 
+            bossHealthText.classList.add('boss-health-text');
+            healthBar.appendChild(bossHealthText); 
+
+            updateBossHealthBar(); 
+        }
+
+        /**
+         * Atualiza a barra de vida do boss.
+         */
+        function updateBossHealthBar() {
+            if (boss) {
+                const bossHealthBarWrapper = document.getElementById('bossHealthBarWrapper');
+                if (bossHealthBarWrapper) {
+                    let bossLeft = parseFloat(boss.style.left);
+                    if (isNaN(bossLeft)) { bossLeft = (gameContainer.offsetWidth / 2) - (100 / 2); boss.style.left = `${bossLeft}px`; }
+                    let bossTop = parseFloat(boss.style.top);
+                    if (isNaN(bossTop)) { bossTop = 50; boss.style.top = `${bossTop}px`; }
+
+                    bossHealthBarWrapper.style.left = `${bossLeft}px`;
+                    bossHealthBarWrapper.style.top = `${bossTop + boss.offsetHeight + 5}px`; 
+                }
+
+                const healthFillBoss = bossHealthBarWrapper.querySelector('.boss-health-fill');
+                const bossHealthText = bossHealthBarWrapper.querySelector('.boss-health-text');
+
+                const currentMaxBossHealth = initialBossHealth * Math.pow(3.75, bossLevel); // Usar a mesma base de cálculo da vida do boss
+                const healthPercentage = (bossHealth / currentMaxBossHealth) * 100;
+                healthFillBoss.style.width = `${healthPercentage}%`; 
+                
+                if (healthPercentage > 60) {
+                    healthFillBoss.style.backgroundColor = '#48bb78'; 
+                } else if (healthPercentage > 30) {
+                    healthFillBoss.style.backgroundColor = '#f6ad55'; 
+                } else {
+                    healthFillBoss.style.backgroundColor = '#e53e3e'; 
+                }
+                bossHealthText.textContent = `${Math.round(bossHealth)} / ${Math.round(currentMaxBossHealth)}`; // Arredonda para números inteiros
+            }
+        }
+
+        /**
+         * Atualiza a lógica do boss (movimento e tiro).
+         * @param {DOMHighResTimeStamp} currentTime - O tempo atual.
+         */
+        function updateBoss(currentTime) {
+            try {
+                if (!boss) return;
+
+                let bossX = parseFloat(boss.style.left);
+                if (isNaN(bossX)) { 
+                    bossX = (gameContainer.offsetWidth / 2) - (100 / 2);
+                    boss.style.left = `${bossX}px`; 
+                }
+
+                bossX += bossMovementDirection * bossMovementSpeed;
+                if (bossX + boss.offsetWidth + bossPadding > gameContainer.offsetWidth) {
+                    bossX = gameContainer.offsetWidth - boss.offsetWidth - bossPadding;
+                    bossMovementDirection *= -1; 
+                } else if (bossX < bossPadding) {
+                    bossX = bossPadding;
+                    bossMovementDirection *= -1; 
+                }
+                boss.style.left = `${bossX}px`;
+                updateBossHealthBar(); 
+
+                // NOVO: Lógica do modo de raiva do boss
+                if (bossHealth <= bossRageThreshold && !bossRageActive) {
+                    bossRageActive = true;
+                    boss.style.filter = `hue-rotate(0deg) saturate(200%) brightness(1.2)`; // Fica avermelhado
+                    currentBossBulletDamage *= 1.05; // Aumenta o dano em 5%
+                    console.log("BOSS ENTROU EM MODO DE RAIVA! Dano aumentado.");
+                }
+
+                if (currentTime - lastBossShotTime > bossShootInterval) {
+                    // NOVO: Prioriza o ataque de shotgun no modo de raiva (somente se bossRageActive)
+                    if (bossRageActive && Math.random() < 0.30) { // 30% de chance no modo de raiva
+                        createShotgunBossBullets();
+                    } else {
+                        const attackTypes = [createSingleBossBullet, createFanBossBullets, createRicochetBossBullet];
+                        const selectedAttack = attackTypes[Math.floor(Math.random() * attackTypes.length)];
+                        selectedAttack();
+                    }
+                    lastBossShotTime = currentTime;
+
+                    // NOVO: Boss summon heavy enemy logic (a partir do terceiro boss e se não houver um heavy enemy na tela)
+                    if (bossLevel >= 2 && !isHeavyEnemyOnScreen && Math.random() < 0.20) { // 20% chance to summon
+                        console.log("Boss attempting to summon heavy enemy...");
+                        createFallingObject(currentTime, true, {health: bossHealth, damage: currentBossBulletDamage});
+                    }
+                }
+            } catch (error) {
+                console.error("Erro em updateBoss:", error);
+            }
+        }
+
+        /**
+         * Cria uma única bala do boss.
+         */
+        function createSingleBossBullet() {
+            const bossBullet = document.createElement('div');
+            bossBullet.classList.add('boss-bullet');
+            let bossLeft = parseFloat(boss.style.left);
+            if (isNaN(bossLeft)) { bossLeft = (gameContainer.offsetWidth / 2) - (100 / 2); boss.style.left = `${bossLeft}px`; }
+            let bossTop = parseFloat(boss.style.top);
+            if (isNaN(bossTop)) { bossTop = 50; boss.style.top = `${bossTop}px`; }
+
+            bossBullet.style.left = `${bossLeft + (boss.offsetWidth / 2) - (15 / 2)}px`;
+            bossBullet.style.top = `${bossTop + boss.offsetHeight}px`;
+            bossBullet.dataset.dx = 0; 
+            bossBullet.dataset.dy = currentEnemyBulletSpeed; 
+            gameContainer.appendChild(bossBullet);
+            bossBullets.push(bossBullet);
+        }
+
+        /**
+         * Cria balas do boss em leque.
+         */
+        function createFanBossBullets() {
+            const bossBullet = document.createElement('div');
+            bossBullet.classList.add('boss-bullet');
+            let bossLeft = parseFloat(boss.style.left);
+            if (isNaN(bossLeft)) { bossLeft = (gameContainer.offsetWidth / 2) - (100 / 2); boss.style.left = `${bossLeft}px`; }
+            let bossTop = parseFloat(boss.style.top);
+            if (isNaN(bossTop)) { bossTop = 50; boss.style.top = `${bossTop}px`; }
+
+            const startX = bossLeft + boss.offsetWidth / 2;
+            const startY = bossTop + boss.offsetHeight;
+            const spreadAngle = Math.PI / 6; 
+            const numBullets = 3;
+            const baseSpeed = currentEnemyBulletSpeed;
+
+            for (let i = 0; i < numBullets; i++) {
+                const angleOffset = (i - (numBullets - 1) / 2) * spreadAngle / (numBullets - 1);
+                const angle = Math.PI / 2 + angleOffset; 
+
+                const dx = Math.cos(angle) * baseSpeed;
+                const dy = Math.sin(angle) * baseSpeed;
+
+                const bossBullet = document.createElement('div');
+                bossBullet.classList.add('boss-bullet');
+                bossBullet.style.left = `${startX - (15 / 2)}px`;
+                bossBullet.style.top = `${startY}px`;
+                bossBullet.dataset.dx = dx;
+                bossBullet.dataset.dy = dy;
+                gameContainer.appendChild(bossBullet);
+                bossBullets.push(bossBullet);
+            }
+        }
+
+        /**
+         * Cria uma bala ricochete do boss.
+         */
+        function createRicochetBossBullet() {
+            const bossBullet = document.createElement('div');
+            bossBullet.classList.add('boss-bullet');
+            let bossLeft = parseFloat(boss.style.left);
+            if (isNaN(bossLeft)) { bossLeft = (gameContainer.offsetWidth / 2) - (100 / 2); boss.style.left = `${bossLeft}px`; }
+            let bossTop = parseFloat(boss.style.top);
+            if (isNaN(bossTop)) { bossTop = 50; boss.style.top = `${bossTop}px`; }
+
+            bossBullet.style.left = `${bossLeft + (boss.offsetWidth / 2) - (15 / 2)}px`;
+            bossBullet.style.top = `${bossTop + boss.offsetHeight}px`;
+            
+            bossBullet.dataset.dx = (Math.random() > 0.5 ? 1 : -1) * (currentEnemyBulletSpeed * 1.5); 
+            bossBullet.dataset.dy = currentEnemyBulletSpeed;
+            gameContainer.appendChild(bossBullet);
+            bossBullets.push(bossBullet);
+        }
+
+        /**
+         * Cria 10 balas do boss em todas as direções (ataque "shotgun").
+         */
+        function createShotgunBossBullets() {
+            let bossLeft = parseFloat(boss.style.left);
+            if (isNaN(bossLeft)) { bossLeft = (gameContainer.offsetWidth / 2) - (100 / 2); boss.style.left = `${bossLeft}px`; }
+            let bossTop = parseFloat(boss.style.top);
+            if (isNaN(bossTop)) { bossTop = 50; boss.style.top = `${bossTop}px`; }
+
+            const startX = bossLeft + boss.offsetWidth / 2;
+            const startY = bossTop + boss.offsetHeight / 2; // Dispara do centro do boss
+            const numBullets = 10;
+            const angleIncrement = (Math.PI * 2) / numBullets; // 360 graus dividido pelo número de balas
+            const baseSpeed = currentEnemyBulletSpeed * 0.8; // Ligeiramente mais lento para o ataque de área
+
+            for (let i = 0; i < numBullets; i++) {
+                const angle = i * angleIncrement;
+
+                // dx e dy calculados para ir em todas as direções. dy é invertido para ir para baixo.
+                const dx = Math.cos(angle) * baseSpeed;
+                const dy = Math.sin(angle) * baseSpeed;
+
+                const bossBullet = document.createElement('div');
+                bossBullet.classList.add('boss-bullet');
+                bossBullet.style.left = `${startX - (15 / 2)}px`;
+                bossBullet.style.top = `${startY - (15 / 2)}px`; // Ajusta para sair do centro da bala
+                bossBullet.dataset.dx = dx;
+                bossBullet.dataset.dy = dy;
+                gameContainer.appendChild(bossBullet);
+                bossBullets.push(bossBullet);
+            }
+        }
+
+        /**
+         * Atualiza a posição dos projéteis do boss e verifica colisões com o jogador.
+         */
+        function updateBossBullets() {
+            try {
+                for (let i = 0; i < bossBullets.length; i++) {
+                    const bBullet = bossBullets[i];
+                    let currentTop = parseFloat(bBullet.style.top);
+                    if (isNaN(currentTop)) { currentTop = 0; bBullet.style.top = `${currentTop}px`; }
+                    let currentLeft = parseFloat(bBullet.style.left);
+                    if (isNaN(currentLeft)) { currentLeft = 0; bBullet.style.left = `${currentLeft}px`; }
+                    let dx = parseFloat(bBullet.dataset.dx);
+                    if (isNaN(dx)) { dx = 0; }
+                    let dy = parseFloat(bBullet.dataset.dy);
+                    if (isNaN(dy)) { dy = 0; }
+
+                    currentTop += dy;
+                    currentLeft += dx;
+
+                    if (bBullet.dataset.dx !== '0') { 
+                        if (currentLeft <= 0) {
+                            currentLeft = 0; 
+                            dx *= -1; 
+                            bBullet.dataset.dx = dx; 
+                        } else if (currentLeft + bBullet.offsetWidth >= gameContainer.offsetWidth) {
+                            currentLeft = gameContainer.offsetWidth - bBullet.offsetWidth; 
+                            dx *= -1; 
+                            bBullet.dataset.dx = dx; 
+                        }
+                    }
+
+                    bBullet.style.top = `${currentTop}px`;
+                    bBullet.style.left = `${currentLeft}px`;
+
+                    if (currentTop > gameContainer.offsetHeight) {
+                        bBullet.remove();
+                        bossBullets.splice(i, 1);
+                        i--;
+                        continue;
+                    }
+
+                    const playerRect = player.getBoundingClientRect();
+                    const bBulletRect = bBullet.getBoundingClientRect();
+
+                    if (
+                        bBulletRect.bottom > playerRect.top &&
+                        bBulletRect.top < playerRect.bottom &&
+                        bBulletRect.right > playerRect.left &&
+                        bBulletRect.left < playerRect.right
+                    ) {
+                        bBullet.remove();
+                        bossBullets.splice(i, 1);
+                        i--;
+
+                        // Aplica dano com base no tipo da bala do boss e escalonamento por nível do boss
+                        const damageToApply = currentBossBulletDamage; 
+                        
+                        // Lógica de dano ao escudo (NOVO)
+                        if (shieldActive && shieldHealth > 0) {
+                            shieldHealth -= damageToApply;
+                            if (shieldHealth <= 0) {
+                                const remainingDamage = Math.abs(shieldHealth); // Dano que sobrou após zerar o escudo
+                                deactivateShield(); // Desativa o escudo
+                                health = Math.max(0, playerHealthBeforeShield - remainingDamage); // Aplica o dano restante à vida normal
+                            }
+                        } else {
+                            health = Math.max(0, health - damageToApply); 
+                        }
+                        
+                        updateHealthBarDisplay();
+                        console.log("Atingido pelo boss! Vida restante: " + health + ", Escudo: " + shieldHealth);
+                        if (health <= 0) {
+                            showGameOverScreen(); 
+                            return;
+                        }
+                        player.classList.add('player-hit-effect');
+                        setTimeout(() => {
+                            player.classList.remove('player-hit-effect');
+                        }, 150); 
+                    }
+                }
+            } catch (error) {
+                console.error("Erro em updateBossBullets:", error);
+            }
+        }
+
+        /**
+         * Lida com a derrota do boss, exibindo a tela de "Stage Clear".
+         */
+        function handleBossDefeated() {
+            gameRunning = false;
+            cancelAnimationFrame(animationFrameId);
+            console.log('handleBossDefeated: gameRunning = false, isBossFightActive =', isBossFightActive); 
+
+            score += 50; 
+            scoreValueDisplay.textContent = score; 
+            stageScoreDisplay.textContent = score; 
+
+            bossLevel++; 
+            playerLevel++; 
+            updatePlayerStatsBasedOnLevel(); 
+            
+            nextBossScoreThreshold = score + Math.ceil(score * 0.5); 
+            console.log("Próximo Boss em: " + nextBossScoreThreshold + " pontos.");
+
+            stageClearScreen.classList.remove('hidden'); 
+            bossMusic.pause(); // Pausa a música do boss
+            bossMusic.currentTime = 0;
+        }
+
+        /**
+         * Atualiza a posição dos segmentos de fundo para criar rolagem infinita com rotação.
+         */
+        function updateBackgroundSegments() {
+            try {
+                const gameContainerHeight = gameContainer.offsetHeight;
+                const scrollSpeed = backgroundScrollSpeed; 
+
+                backgroundSegments.forEach(segment => {
+                    let currentTop = parseFloat(segment.style.top);
+                    if (isNaN(currentTop)) { currentTop = 0; segment.style.top = `${currentTop}px`; }
+                    currentTop += scrollSpeed;
+                    segment.style.top = `${currentTop}px`;
+
+                    if (currentTop >= gameContainerHeight) {
+                        segment.style.top = `${currentTop - (gameContainerHeight * 2) - 1}px`; 
+                        segment.classList.toggle('rotated-180'); 
+                    }
+                });
+            } catch (error) {
+                console.error("Erro em updateBackgroundSegments:", error);
+            }
+        }
+
+        /**
+         * Atualiza o estado do escudo (NOVO).
+         * @param {DOMHighResTimeStamp} currentTime - O tempo atual.
+         */
+        function updateShield(currentTime) {
+            // O escudo só termina quando a vida é consumida, não há timer para ele.
+            // A lógica de desativação está nos métodos de dano.
+        }
+        
+        /**
+         * Loop principal do jogo.
+         * @param {DOMHighResTimeStamp} currentTime - O tempo atual.
+         */
+        function gameLoop(currentTime) {
+            try {
+                if (!gameRunning) return;
+
+                console.log('gameLoop: isBossFightActive =', isBossFightActive); 
+                updateBackgroundSegments(); 
+                updateShield(currentTime); 
+
+                if (isBossFightActive) {
+                    console.log('gameLoop: Executing BOSS logic'); 
+                    updateBoss(currentTime);
+                    updateBossBullets();
+                    // NOVO: Drop de power-ups durante a boss fight
+                    if (currentTime - lastBossPowerUpDropTime > bossFightPowerUpInterval) {
+                        const dropType = Math.random() < 0.7 ? 'health_up' : 'shield'; // 70% vida, 30% escudo
+                        const spawnX = Math.random() * (gameContainer.offsetWidth - 30); // 30px é o tamanho do power-up
+                        createCollectible(spawnX, 0, currentTime, dropType); // Spawna no topo
+                        lastBossPowerUpDropTime = currentTime;
+                    }
+                } else {
+                    console.log('gameLoop: Executing NORMAL game logic'); 
+                    if (currentTime - lastObjectSpawnTime > objectSpawnInterval) {
+                        createFallingObject(currentTime); 
+                        lastObjectSpawnTime = currentTime;
+                    }
+
+                    if (currentTime - lastObstacleSpawnTime > currentObstacleSpawnInterval) { 
+                        createObstacle();
+                        lastObstacleSpawnTime = currentTime;
+                    }
+
+                    updateFallingObjects(currentTime); 
+                    updateEnemyBullets(); 
+                    updateObstacles(); 
+                }
+
+                // NOVO: updateCollectibles é chamado sempre (fora do if/else de isBossFightActive)
+                updateCollectibles(currentTime);
+                updateBossProgressBar(); // NOVO: Atualiza a barra de progresso do boss
+
+                if (currentTime - lastShotTime > shootInterval) {
+                    createBullet();
+                    lastShotTime = currentTime;
+                }
+
+                updateBullets(); 
+                updatePlayerPosition();
+                animationFrameId = requestAnimationFrame(gameLoop);
+            } catch (error) {
+                console.error("Erro crítico no gameLoop:", error);
+                showGameOverScreen(); 
+            }
+        }
+
+        /**
+         * Inicia o loop do jogo.
+         */
+        function startGameLoop() {
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+            }
+            animationFrameId = requestAnimationFrame(gameLoop);
+        }
+
+        /**
+         * Exibe a tela de Fim de Jogo.
+         */
+        function showGameOverScreen() {
+            gameRunning = false;
+            cancelAnimationFrame(animationFrameId);
+            finalScoreDisplay.textContent = score;
+            gameOverScreen.classList.remove('hidden');
+            backgroundMusic.pause(); // Pausa a música ao terminar o jogo
+            backgroundMusic.currentTime = 0; // Volta para o início da música
+            bossMusic.pause(); // Pausa a música do boss
+            bossMusic.currentTime = 0;
+        }
+
+        // --- Eventos de Controle ---
+
+        // Controle de Toque (Celular)
+        gameContainer.addEventListener('touchstart', (e) => {
+            if (!gameRunning) return;
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY; 
+            playerMoving = true;
+        });
+
+        gameContainer.addEventListener('touchmove', (e) => {
+            if (!gameRunning || !playerMoving) return;
+            const touchCurrentX = e.touches[0].clientX;
+            const touchCurrentY = e.touches[0].clientY; 
+            const deltaX = touchCurrentX - touchStartX;
+            const deltaY = touchCurrentY - touchStartY; 
+            
+            playerX += deltaX * 1.0; 
+            playerX = Math.max(0, Math.min(playerX, gameContainer.offsetWidth - player.offsetWidth));
+
+            playerY += deltaY * 1.0; 
+            playerY = Math.max(0, Math.min(playerY, gameContainer.offsetHeight - player.offsetHeight));
+
+            updatePlayerPosition();
+            touchStartX = touchCurrentX;
+            touchStartY = touchCurrentY; 
+        });
+
+        gameContainer.addEventListener('touchend', () => {
+            playerMoving = false;
+        });
+
+        // Controle de Teclado (Desktop - para testes ou se o usuário jogar no PC)
+        document.addEventListener('keydown', (e) => {
+            if (!gameRunning) return;
+            if (e.key === 'ArrowLeft') {
+                playerX = Math.max(0, playerX - playerSpeed * 2);
+            } else if (e.key === 'ArrowRight') {
+                playerX = Math.min(gameContainer.offsetWidth - player.offsetWidth, playerX + playerSpeed * 2);
+            } else if (e.key === 'ArrowUp') { 
+                playerY = Math.max(0, playerY - playerSpeed * 2); 
+            } else if (e.key === 'ArrowDown') { 
+                playerY = Math.min(gameContainer.offsetHeight - player.offsetHeight, playerY + playerSpeed * 2); 
+            }
+            updatePlayerPosition();
+        });
+
+        // Botão Reiniciar
+        restartButton.addEventListener('click', initializeGame);
+        // Botão Iniciar para a tela inicial
+        startButton.addEventListener('click', initializeGame); 
+        // Botão Continuar para a tela de Stage Clear
+        continueButton.addEventListener('click', startNextStage); 
+
+        // Exibe a tela inicial ao carregar
+        window.onload = () => {
+            startScreen.classList.remove('hidden');
+            gameOverScreen.classList.add('hidden'); 
+            stageClearScreen.classList.add('hidden'); // Garante que a tela de stage clear esteja oculta
+            gameRunning = false; 
+        };
+    </script>
+</body>
+</html>
