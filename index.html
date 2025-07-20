@@ -1100,35 +1100,35 @@
          */
         function clearGameElements() {
             // Remove elementos do DOM e limpa arrays
-            fallingObjects.forEach(obj => { if(obj.parentNode) obj.parentNode.removeChild(obj); });
+            fallingObjects.forEach(obj => { if(obj && obj.parentNode) obj.parentNode.removeChild(obj); });
             fallingObjects = [];
-            bullets.forEach(bullet => { if(bullet.parentNode) bullet.parentNode.removeChild(bullet); });
+            bullets.forEach(bullet => { if(bullet && bullet.parentNode) bullet.parentNode.removeChild(bullet); });
             bullets = [];
-            collectibles.forEach(col => { if(col.parentNode) col.parentNode.removeChild(col); });
+            collectibles.forEach(col => { if(col && col.parentNode) col.parentNode.removeChild(col); });
             collectibles = [];
-            enemyBullets.forEach(b => { if(b.parentNode) b.parentNode.removeChild(b); }); 
+            enemyBullets.forEach(b => { if(b && b.parentNode) b.parentNode.removeChild(b); }); 
             enemyBullets = [];
-            obstacles.forEach(o => { if(o.parentNode) o.parentNode.removeChild(o); }); 
+            obstacles.forEach(o => { if(o && o.parentNode) o.parentNode.removeChild(o); }); 
             obstacles = [];
 
-            if (boss) {
-                if(boss.parentNode) boss.parentNode.removeChild(boss);
+            if (boss && boss.parentNode) {
+                boss.parentNode.removeChild(boss);
                 boss = null;
             }
             const existingBossHealthBarWrapper = document.getElementById('bossHealthBarWrapper');
-            if (existingBossHealthBarWrapper) {
-                // CORRIGIDO: Typo here. Was existingBossBarWrapper.parentNode.removeChild
-                if(existingBossHealthBarWrapper.parentNode) existingBossHealthBarWrapper.parentNode.removeChild(existingBossHealthBarWrapper);
+            if (existingBossHealthBarWrapper && existingBossHealthBarWrapper.parentNode) {
+                existingBossHealthBarWrapper.parentNode.removeChild(existingBossHealthBarWrapper);
             }
-            bossBullets.forEach(b => { if(b.parentNode) b.parentNode.removeChild(b); });
+            bossBullets.forEach(b => { if(b && b.parentNode) b.parentNode.removeChild(b); });
             bossBullets = [];
-            console.log('clearGameElements called. isBossFightActive before removal:', isBossFightActive); 
+            console.log('clearGameElements called. All elements removed and arrays cleared.');
         }
 
         /**
          * Updates player position.
          */
         function updatePlayerPosition() {
+            if (!player) return; // Adicionado: Verificação para evitar erro se player for nulo
             player.style.left = `${playerX}px`;
             player.style.bottom = `${gameContainer.offsetHeight - playerY - player.offsetHeight}px`;
         }
@@ -1576,6 +1576,13 @@
             try {
                 for (let i = 0; i < fallingObjects.length; i++) {
                     const object = fallingObjects[i];
+                    if (!object) { // Verificação de nulidade
+                        console.warn("Objeto caindo nulo detectado no array no índice", i, ". Removendo.");
+                        fallingObjects.splice(i, 1);
+                        i--;
+                        continue;
+                    }
+
                     let currentTop = parseFloat(object.style.top);
                     if (isNaN(currentTop)) { currentTop = 0; object.style.top = `${currentTop}px`; }
                     let currentLeft = parseFloat(object.style.left); 
@@ -1604,7 +1611,7 @@
                         }
 
                         if (currentTop > gameContainer.offsetHeight) {
-                            object.remove();
+                            if (object.parentNode) object.parentNode.removeChild(object); // Remove do DOM
                             fallingObjects.splice(i, 1);
                             i--;
                             continue;
@@ -1622,6 +1629,7 @@
                 }
             } catch (error) {
                 console.error("Erro em updateFallingObjects:", error);
+                showGameOverScreen(); // Chamar Game Over em caso de erro crítico no loop
             }
         }
 
@@ -1632,6 +1640,13 @@
             try {
                 for (let i = 0; i < bullets.length; i++) {
                     const bullet = bullets[i];
+                    if (!bullet) { // Verificação de nulidade
+                        console.warn("Bala do jogador nula detectada no array no índice", i, ". Removendo.");
+                        bullets.splice(i, 1);
+                        i--;
+                        continue;
+                    }
+
                     let currentBottom = parseFloat(bullet.style.bottom);
                     if (isNaN(currentBottom)) { currentBottom = 0; bullet.style.bottom = `${currentBottom}px`; }
                     let currentLeft = parseFloat(bullet.style.left);
@@ -1648,7 +1663,7 @@
                     bullet.style.left = `${currentLeft}px`;
 
                     if (currentBottom > gameContainer.offsetHeight || currentBottom < -bullet.offsetHeight) {
-                        bullet.remove();
+                        if (bullet.parentNode) bullet.parentNode.removeChild(bullet); // Remove do DOM
                         bullets.splice(i, 1);
                         i--; 
                         continue; 
@@ -1664,7 +1679,7 @@
                             bulletRect.right > bossRect.left &&
                             bulletRect.left < bossRect.right
                         ) {
-                            bullet.remove();
+                            if (bullet.parentNode) bullet.parentNode.removeChild(bullet); // Remove do DOM
                             bullets.splice(i, 1);
                             i--;
                             
@@ -1681,6 +1696,12 @@
                     const bulletRect = bullet.getBoundingClientRect();
                     for (let j = 0; j < fallingObjects.length; j++) {
                         const object = fallingObjects[j];
+                        if (!object) { // Verificação de nulidade
+                            console.warn("Objeto caindo nulo detectado durante colisão de bala do jogador no índice", j, ". Removendo.");
+                            fallingObjects.splice(j, 1);
+                            j--;
+                            continue;
+                        }
                         const objectRect = object.getBoundingClientRect();
 
                         if (
@@ -1689,7 +1710,7 @@
                             bulletRect.right > objectRect.left &&
                             bulletRect.left < objectRect.right
                         ) {
-                            bullet.remove(); 
+                            if (bullet.parentNode) bullet.parentNode.removeChild(bullet); // Remove do DOM
                             bullets.splice(i, 1);
                             i--; 
                             
@@ -1716,7 +1737,7 @@
                                     object.classList.remove('enemy-hit-effect');
                                 }, 100); 
                             } else {
-                                object.remove();
+                                if (object.parentNode) object.parentNode.removeChild(object); // Remove do DOM
                                 fallingObjects.splice(j, 1);
                                 j--; 
                                 
@@ -1744,6 +1765,7 @@
                 }
             } catch (error) {
                 console.error("Erro em updateBullets:", error);
+                showGameOverScreen(); // Chamar Game Over em caso de erro crítico no loop
             }
         }
 
@@ -1754,6 +1776,13 @@
             try {
                 for (let i = 0; i < collectibles.length; i++) {
                     const collectible = collectibles[i];
+                    if (!collectible) { // Verificação de nulidade
+                        console.warn("Coletável nulo detectado no array no índice", i, ". Removendo.");
+                        collectibles.splice(i, 1);
+                        i--;
+                        continue;
+                    }
+
                     let currentTop = parseFloat(collectible.style.top);
                     if (isNaN(currentTop)) {
                         currentTop = 0; 
@@ -1769,7 +1798,7 @@
                     }
 
                     if (currentTop > gameContainer.offsetHeight) {
-                        collectible.remove();
+                        if (collectible.parentNode) collectible.parentNode.removeChild(collectible); // Remove do DOM
                         collectibles.splice(i, 1);
                         i--;
                         continue;
@@ -1789,7 +1818,7 @@
                         } else if (collectible.classList.contains('debuff')) {
                             collectDebuff(collectible);
                         }
-                        collectible.remove();
+                        if (collectible.parentNode) collectible.parentNode.removeChild(collectible); // Remove do DOM
                         collectibles.splice(i, 1);
                         i--;
                         return; 
@@ -1797,6 +1826,7 @@
                 }
             } catch (error) {
                 console.error("Erro em updateCollectibles:", error);
+                showGameOverScreen(); // Chamar Game Over em caso de erro crítico no loop
             }
         }
 
@@ -1807,6 +1837,13 @@
             try {
                 for (let i = 0; i < enemyBullets.length; i++) {
                     const eBullet = enemyBullets[i];
+                    if (!eBullet) { // Verificação de nulidade
+                        console.warn("Bala inimiga nula detectada no array no índice", i, ". Removendo.");
+                        enemyBullets.splice(i, 1);
+                        i--;
+                        continue;
+                    }
+
                     let currentTop = parseFloat(eBullet.style.top);
                     if (isNaN(currentTop)) { currentTop = 0; eBullet.style.top = `${currentTop}px`; }
                     let currentLeft = parseFloat(eBullet.style.left);
@@ -1823,7 +1860,7 @@
                     eBullet.style.left = `${currentLeft}px`;
 
                     if (currentTop > gameContainer.offsetHeight || currentLeft < -eBullet.offsetWidth || currentLeft > gameContainer.offsetWidth) {
-                        eBullet.remove();
+                        if (eBullet.parentNode) eBullet.parentNode.removeChild(eBullet); // Remove do DOM
                         enemyBullets.splice(i, 1);
                         i--;
                         continue;
@@ -1838,7 +1875,7 @@
                         eBulletRect.right > playerRect.left &&
                         eBulletRect.left < playerRect.right
                     ) {
-                        eBullet.remove();
+                        if (eBullet.parentNode) eBullet.parentNode.removeChild(eBullet); // Remove do DOM
                         enemyBullets.splice(i, 1);
                         i--;
 
@@ -1888,6 +1925,7 @@
                 }
             } catch (error) {
                 console.error("Erro em updateEnemyBullets:", error);
+                showGameOverScreen(); // Chamar Game Over em caso de erro crítico no loop
             }
         }
 
@@ -1898,6 +1936,13 @@
             try {
                 for (let i = 0; i < obstacles.length; i++) {
                     const obstacle = obstacles[i];
+                    if (!obstacle) { // Verificação de nulidade
+                        console.warn("Obstáculo nulo detectado no array no índice", i, ". Removendo.");
+                        obstacles.splice(i, 1);
+                        i--;
+                        continue;
+                    }
+
                     let currentTop = parseFloat(obstacle.style.top);
                     if (isNaN(currentTop)) {
                         currentTop = -45; 
@@ -1906,7 +1951,7 @@
                     obstacle.style.top = `${currentTop + currentEnemyMovementSpeed}px`; 
 
                     if (currentTop > gameContainer.offsetHeight) {
-                        obstacle.remove();
+                        if (obstacle.parentNode) obstacle.parentNode.removeChild(obstacle); // Remove do DOM
                         obstacles.splice(i, 1);
                         i--;
                         continue;
@@ -1921,7 +1966,7 @@
                         obstacleRect.right > playerRect.left &&
                         obstacleRect.left < playerRect.right
                     ) {
-                        obstacle.remove();
+                        if (obstacle.parentNode) obstacle.parentNode.removeChild(obstacle); // Remove do DOM
                         obstacles.splice(i, 1);
                         i--;
 
@@ -1957,6 +2002,7 @@
                 }
             } catch (error) {
                 console.error("Erro em updateObstacles:", error);
+                showGameOverScreen(); // Chamar Game Over em caso de erro crítico no loop
             }
         }
 
@@ -2373,6 +2419,13 @@
             try {
                 for (let i = 0; i < bossBullets.length; i++) {
                     const bBullet = bossBullets[i];
+                    if (!bBullet) { // Verificação de nulidade
+                        console.warn("Bala do boss nula detectada no array no índice", i, ". Removendo.");
+                        bossBullets.splice(i, 1);
+                        i--;
+                        continue;
+                    }
+
                     let currentTop = parseFloat(bBullet.style.top);
                     if (isNaN(currentTop)) { currentTop = 0; bBullet.style.top = `${currentTop}px`; }
                     let currentLeft = parseFloat(bBullet.style.left);
@@ -2403,7 +2456,7 @@
 
                     // Remove a bala se sair da tela (incluindo as de shotgun que não ricocheteiam)
                     if (currentTop > gameContainer.offsetHeight || currentLeft < -bBullet.offsetWidth || currentLeft > gameContainer.offsetWidth) {
-                        bBullet.remove();
+                        if (bBullet.parentNode) bBullet.parentNode.removeChild(bBullet); // Remove do DOM
                         bossBullets.splice(i, 1);
                         i--;
                         continue;
@@ -2418,7 +2471,7 @@
                         bBulletRect.right > playerRect.left &&
                         bBulletRect.left < playerRect.right
                     ) {
-                        bBullet.remove();
+                        if (bBullet.parentNode) bBullet.parentNode.removeChild(bBullet); // Remove do DOM
                         bossBullets.splice(i, 1);
                         i--;
 
@@ -2454,6 +2507,7 @@
                 }
             } catch (error) {
                 console.error("Erro em updateBossBullets:", error);
+                showGameOverScreen(); // Chamar Game Over em caso de erro crítico no loop
             }
         }
 
@@ -2461,9 +2515,12 @@
          * Lida com a derrota do boss, exibindo a tela de "Stage Clear".
          */
         function handleBossDefeated() {
-            gameRunning = false;
-            cancelAnimationFrame(animationFrameId);
+            console.log('Entering handleBossDefeated(). Game state:', gameRunning, 'isBossFightActive:', isBossFightActive);
+            gameRunning = false; // Primeiro, pare o jogo.
+            cancelAnimationFrame(animationFrameId); // Cancele o loop de animação.
+            
             clearGameElements(); // Limpa todos os elementos após a derrota do boss
+            
             console.log('handleBossDefeated: gameRunning = false, isBossFightActive =', isBossFightActive); 
 
             score += 50; 
@@ -2480,6 +2537,7 @@
             stageClearScreen.classList.remove('hidden'); 
             bossMusic.pause(); 
             bossMusic.currentTime = 0;
+            console.log('Exiting handleBossDefeated(). Stage Clear Screen shown.');
         }
 
         /**
@@ -2491,6 +2549,8 @@
                 const scrollSpeed = backgroundScrollSpeed; 
 
                 backgroundSegments.forEach(segment => {
+                    if (!segment) return; // Adicionado: Verificação de nulidade
+
                     let currentTop = parseFloat(segment.style.top);
                     if (isNaN(currentTop)) { currentTop = 0; segment.style.top = `${currentTop}px`; }
                     currentTop += scrollSpeed;
@@ -2503,6 +2563,7 @@
                 });
             } catch (error) {
                 console.error("Erro em updateBackgroundSegments:", error);
+                showGameOverScreen(); // Chamar Game Over em caso de erro crítico no loop
             }
         }
 
@@ -2520,9 +2581,12 @@
          */
         function gameLoop(currentTime) {
             try {
-                if (!gameRunning || gamePaused) return;
+                if (!gameRunning || gamePaused) {
+                    // console.log('gameLoop: Game is not running or paused. Stopping loop.'); // DEBUG
+                    return;
+                }
 
-                console.log('gameLoop: isBossFightActive =', isBossFightActive); 
+                // console.log('gameLoop: isBossFightActive =', isBossFightActive); // DEBUG
                 updateBackgroundSegments(); 
                 updateShield(currentTime); 
 
@@ -2541,7 +2605,7 @@
                         lastObstacleSpawnTime = currentTime;
                     }
                 } else { 
-                    console.log('gameLoop: Executing BOSS logic'); 
+                    // console.log('gameLoop: Executing BOSS logic'); // DEBUG
                     updateBoss(currentTime);
                     updateBossBullets();
                     if (currentTime - lastBossPowerUpDropTime > bossFightPowerUpInterval) {
@@ -2583,9 +2647,12 @@
          * Exibe a tela de Fim de Jogo.
          */
         async function showGameOverScreen() {
-            gameRunning = false;
-            cancelAnimationFrame(animationFrameId);
+            console.log('Entering showGameOverScreen(). Game state:', gameRunning);
+            gameRunning = false; // Primeiro, pare o jogo.
+            cancelAnimationFrame(animationFrameId); // Cancele o loop de animação.
+            
             clearGameElements(); // Garante que todos os elementos sejam removidos ao game over
+            
             finalScoreDisplay.textContent = score;
             backgroundMusic.pause(); 
             backgroundMusic.currentTime = 0; 
@@ -2613,13 +2680,14 @@
                 playerNameInput.focus(); // Foca no input
                 displayHighScores(highScores); // Exibe o ranking atual
             } else {
-                gameOverScreen.classList.add('hidden'); // Esconde Game Over
+                gameOverScreen.classList.remove('hidden'); // Esconde Game Over
                 // Se não for Top 10, mas queremos mostrar o ranking, podemos fazer isso aqui.
                 // Por enquanto, apenas esconde o ranking se não for Top 10.
                 rankingScreen.classList.add('hidden'); 
             }
             // Se o jogador não for top 10, ele ainda pode querer ver o ranking.
             // O botão "VER RANKING" na tela de Game Over cuidará disso.
+            console.log('Exiting showGameOverScreen(). Game Over screen shown or ranking displayed.');
         }
 
         /**
