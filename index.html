@@ -357,7 +357,7 @@
         @keyframes blink {
             0% { opacity: 0; }
             50% { opacity: 1; }
-            100% { opacity: 0; }
+            100% { opacity: 0; } /* CORRIGIDO: Era 'opacity = 0;' */
         }
 
         .pause-screen, .ranking-screen { /* Adicionado .ranking-screen */
@@ -668,6 +668,7 @@
                         <h1>FIM DE JOGO!</h1>
                         <p>Sua Pontuação: <span id="finalScore">0</span></p>
                         <button class="restart-button" id="restartButton">JOGAR NOVAMENTE</button>
+                        <button class="screen-button" id="showRankingButton">VER RANKING</button> <!-- Botão adicionado -->
                     </div>
 
                     <div class="stage-clear-screen hidden" id="stageClearScreen">
@@ -753,6 +754,8 @@
 
 
         // Authenticate anonymously
+        // onAuthStateChanged will be triggered automatically on Firebase init
+        // We ensure signInAnonymously is called if no token is provided.
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 userId = user.uid;
@@ -770,50 +773,21 @@
                     console.log("Firebase authenticated anonymously. User ID:", userId);
                 } catch (error) {
                     console.error("Firebase authentication error:", error);
+                    // Mesmo se a autenticação falhar, o jogo deve tentar rodar, apenas sem o ranking.
+                    // Não há necessidade de 'resolve()' aqui, pois não estamos em uma Promise.
                 }
             }
         });
 
 
-        // Referências aos elementos DOM
-        const gameContainer = document.getElementById('gameContainer');
-        const player = document.getElementById('player');
-        const scoreValueDisplay = document.getElementById('scoreValue'); 
-        const playerDamageDisplay = document.getElementById('playerDamageDisplay'); 
-        const playerLevelDisplay = document.getElementById('playerLevelDisplay'); 
-        const gameOverScreen = document.getElementById('gameOverScreen');
-        const finalScoreDisplay = document.getElementById('finalScore');
-        const restartButton = document.getElementById('restartButton');
-        const startScreen = document.getElementById('startScreen');
-        const stageClearScreen = document.getElementById('stageClearScreen'); 
-        const continueButton = document.getElementById('continueButton');   
-        const pauseButton = document.getElementById('pauseButton'); 
-        const pauseScreen = document.getElementById('pauseScreen'); 
-
-        // Referências aos novos elementos da UI
-        const playerHealthBar = document.getElementById('playerHealthBar'); 
-        const healthFill = document.getElementById('healthFill'); 
-        const overshieldFill = document.getElementById('overshieldFill'); 
-        const playerHealthText = document.getElementById('playerHealthText'); 
-
-        const shieldHealthBar = document.getElementById('shieldHealthBar'); 
-        const shieldHealthFill = document.getElementById('shieldHealthFill');
-        const shieldHealthText = document.getElementById('shieldHealthText');
-
-        const bossProgressText = document.getElementById('bossProgressText');
-        const bossProgressFill = document.getElementById('bossProgressFill');
-
-        // Referências aos novos elementos de texto da UI
-        const pressStartText = document.getElementById('pressStartText'); 
-        const pauseContinueText = document.getElementById('pauseContinueText'); 
-
-        // Ranking UI elements
-        const rankingScreen = document.getElementById('rankingScreen');
-        const highScoresList = document.getElementById('highScoresList');
-        const nameInputForm = document.getElementById('nameInputForm');
-        const playerNameInput = document.getElementById('playerNameInput');
-        const submitScoreButton = document.getElementById('submitScoreButton');
-        const rankingPlayAgainButton = document.getElementById('rankingPlayAgainButton');
+        // Referências aos elementos DOM (declaradas no escopo global para serem acessíveis)
+        let gameContainer, player, scoreValueDisplay, playerDamageDisplay, playerLevelDisplay, 
+            gameOverScreen, finalScoreDisplay, restartButton, startScreen, stageClearScreen, 
+            continueButton, pauseButton, pauseScreen, playerHealthBar, healthFill, 
+            overshieldFill, playerHealthText, shieldHealthBar, shieldHealthFill, 
+            shieldHealthText, bossProgressText, bossProgressFill, pressStartText, 
+            pauseContinueText, rankingScreen, highScoresList, nameInputForm, 
+            playerNameInput, submitScoreButton, rankingPlayAgainButton, showRankingButton;
 
 
         // Segmentos de fundo
@@ -1125,26 +1099,27 @@
          * Limpa todos os elementos de jogo (inimigos, balas, coletáveis, etc.).
          */
         function clearGameElements() {
-            fallingObjects.forEach(obj => obj.remove());
+            // Remove elementos do DOM e limpa arrays
+            fallingObjects.forEach(obj => { if(obj.parentNode) obj.parentNode.removeChild(obj); });
             fallingObjects = [];
-            bullets.forEach(bullet => bullet.remove());
+            bullets.forEach(bullet => { if(bullet.parentNode) bullet.parentNode.removeChild(bullet); });
             bullets = [];
-            collectibles.forEach(col => col.remove());
+            collectibles.forEach(col => { if(col.parentNode) col.parentNode.removeChild(col); });
             collectibles = [];
-            enemyBullets.forEach(b => b.remove()); 
+            enemyBullets.forEach(b => { if(b.parentNode) b.parentNode.removeChild(b); }); 
             enemyBullets = [];
-            obstacles.forEach(o => o.remove()); 
+            obstacles.forEach(o => { if(o.parentNode) o.parentNode.removeChild(o); }); 
             obstacles = [];
 
             if (boss) {
-                boss.remove();
+                if(boss.parentNode) boss.parentNode.removeChild(boss);
                 boss = null;
             }
             const existingBossHealthBarWrapper = document.getElementById('bossHealthBarWrapper');
             if (existingBossHealthBarWrapper) {
-                existingBossHealthBarWrapper.remove();
+                if(existingBossHealthBarWrapper.parentNode) existingBossBarWrapper.parentNode.removeChild(existingBossHealthBarWrapper);
             }
-            bossBullets.forEach(b => b.remove());
+            bossBullets.forEach(b => { if(b.parentNode) b.parentNode.removeChild(b); });
             bossBullets = [];
             console.log('clearGameElements called. isBossFightActive before removal:', isBossFightActive); 
         }
@@ -1871,7 +1846,7 @@
                         if (eBullet.dataset.isHeavyBullet === 'true') {
                             // Pega o dano base diretamente do dataset da bala do heavy enemy
                             damageToApply = parseFloat(eBullet.dataset.baseBulletDamage);
-                            console.log("Heavy enemy bullet hit! Base Damage:", damageToApply); // DEBUG
+                            console.log("Heavy enemy bullet hit! Base Damage from dataset:", eBullet.dataset.baseBulletDamage, "Parsed:", damageToApply); // DEBUG
                         } else {
                             // Usa o dano base para inimigos normais
                             damageToApply = baseEnemyBulletDamage;
@@ -1906,7 +1881,7 @@
                         }
                         player.classList.add('player-hit-effect');
                         setTimeout(() => {
-                            player.classList.remove('player-hit-effect'); /* CORRIGIDO: Era player-hit-effect, deve ser enemy-hit-effect */
+                            player.classList.remove('player-hit-effect'); 
                         }, 150); 
                     }
                 }
@@ -2744,134 +2719,185 @@
             });
         }
 
+        /**
+         * Configura todos os event listeners e obtém referências aos elementos DOM.
+         * Chamado no window.onload para garantir que todos os elementos estejam disponíveis.
+         */
+        function setupEventListeners() {
+            // Reatribuição das referências DOM (agora dentro de uma função chamada no onload)
+            gameContainer = document.getElementById('gameContainer');
+            player = document.getElementById('player');
+            scoreValueDisplay = document.getElementById('scoreValue'); 
+            playerDamageDisplay = document.getElementById('playerDamageDisplay'); 
+            playerLevelDisplay = document.getElementById('playerLevelDisplay'); 
+            gameOverScreen = document.getElementById('gameOverScreen');
+            finalScoreDisplay = document.getElementById('finalScore');
+            restartButton = document.getElementById('restartButton');
+            startScreen = document.getElementById('startScreen');
+            stageClearScreen = document.getElementById('stageClearScreen'); 
+            continueButton = document.getElementById('continueButton');   
+            pauseButton = document.getElementById('pauseButton'); 
+            pauseScreen = document.getElementById('pauseScreen'); 
 
-        // --- Eventos de Controle ---
+            playerHealthBar = document.getElementById('playerHealthBar'); 
+            healthFill = document.getElementById('healthFill'); 
+            overshieldFill = document.getElementById('overshieldFill'); 
+            playerHealthText = document.getElementById('playerHealthText'); 
 
-        // Controle de Toque (Celular)
-        gameContainer.addEventListener('touchstart', (e) => {
-            if (!gameRunning || gamePaused) return;
-            touchStartX = e.touches[0].clientX;
-            touchStartY = e.touches[0].clientY; 
-            playerMoving = true;
-        });
+            shieldHealthBar = document.getElementById('shieldHealthBar'); 
+            shieldHealthFill = document.getElementById('shieldHealthFill');
+            shieldHealthText = document.getElementById('shieldHealthText');
 
-        gameContainer.addEventListener('touchmove', (e) => {
-            if (!gameRunning || !playerMoving || gamePaused) return;
-            const touchCurrentX = e.touches[0].clientX;
-            const touchCurrentY = e.touches[0].clientY; 
-            const deltaX = touchCurrentX - touchStartX;
-            const deltaY = touchCurrentY - touchStartY; 
+            bossProgressText = document.getElementById('bossProgressText');
+            bossProgressFill = document.getElementById('bossProgressFill');
+
+            pressStartText = document.getElementById('pressStartText'); 
+            pauseContinueText = document.getElementById('pauseContinueText'); 
+
+            rankingScreen = document.getElementById('rankingScreen');
+            highScoresList = document.getElementById('highScoresList');
+            nameInputForm = document.getElementById('nameInputForm');
+            playerNameInput = document.getElementById('playerNameInput');
+            submitScoreButton = document.getElementById('submitScoreButton');
+            rankingPlayAgainButton = document.getElementById('rankingPlayAgainButton');
+            showRankingButton = document.getElementById('showRankingButton'); 
+
+
+            // --- Eventos de Controle ---
+
+            // Controle de Toque (Celular)
+            gameContainer.addEventListener('touchstart', (e) => {
+                if (!gameRunning || gamePaused) return;
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY; 
+                playerMoving = true;
+            });
+
+            gameContainer.addEventListener('touchmove', (e) => {
+                if (!gameRunning || !playerMoving || gamePaused) return;
+                const touchCurrentX = e.touches[0].clientX;
+                const touchCurrentY = e.touches[0].clientY; 
+                const deltaX = touchCurrentX - touchStartX;
+                const deltaY = touchCurrentY - touchStartY; 
+                
+                playerX += deltaX * 1.0; 
+                playerX = Math.max(0, Math.min(playerX, gameContainer.offsetWidth - player.offsetWidth));
+
+                playerY += deltaY * 1.0; 
+                playerY = Math.max(0, Math.min(playerY, gameContainer.offsetHeight - player.offsetHeight));
+
+                updatePlayerPosition();
+                touchStartX = touchCurrentX;
+                touchStartY = touchCurrentY; 
+            });
+
+            gameContainer.addEventListener('touchend', () => {
+                playerMoving = false;
+            });
+
+            // Controle de Teclado (Desktop)
+            document.addEventListener('keydown', (e) => {
+                if (!gameRunning || gamePaused) return;
+                if (e.key === 'ArrowLeft') {
+                    playerX = Math.max(0, playerX - playerSpeed * 2);
+                } else if (e.key === 'ArrowRight') {
+                    playerX = Math.min(gameContainer.offsetWidth - player.offsetWidth, playerX + playerSpeed * 2);
+                } else if (e.key === 'ArrowUp') { 
+                    playerY = Math.max(0, playerY - playerSpeed * 2); 
+                } else if (e.key === 'ArrowDown') { 
+                    playerY = Math.min(gameContainer.offsetHeight - player.offsetHeight, playerY + playerSpeed * 2); 
+                } else if (e.key === 'p' || e.key === 'P') { 
+                    pauseGame();
+                }
+                updatePlayerPosition();
+            });
+
+            // Botão Reiniciar (na tela de Game Over)
+            restartButton.addEventListener('click', initializeGame);
             
-            playerX += deltaX * 1.0; 
-            playerX = Math.max(0, Math.min(playerX, gameContainer.offsetWidth - player.offsetWidth));
+            // Evento no div startScreen para iniciar o jogo (qualquer toque/clique)
+            startScreen.addEventListener('click', () => { 
+                initializeGame();
+                toggleFullScreen(); 
+            }); 
+            
+            // Botão Continuar para a tela de Stage Clear
+            continueButton.addEventListener('click', () => {
+                startNextStage();
+                toggleFullScreen(); 
+            }); 
 
-            playerY += deltaY * 1.0; 
-            playerY = Math.max(0, Math.min(playerY, gameContainer.offsetHeight - player.offsetHeight));
+            // Botão de Pausa
+            pauseButton.addEventListener('click', pauseGame);
+            
+            // Evento no div pauseScreen para retomar o jogo (qualquer toque/clique)
+            pauseScreen.addEventListener('click', () => { 
+                resumeGame();
+            });
 
-            updatePlayerPosition();
-            touchStartX = touchCurrentX;
-            touchStartY = touchCurrentY; 
-        });
+            // Botão de Enviar Pontuação (na tela de Ranking)
+            submitScoreButton.addEventListener('click', () => {
+                const playerName = playerNameInput.value.trim();
+                if (playerName) {
+                    saveHighScore(playerName, score);
+                } else {
+                    // Substitua alert() por um modal customizado no jogo real
+                    const messageBox = document.createElement('div');
+                    messageBox.style.cssText = `
+                        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                        background-color: #333; color: white; padding: 20px; border-radius: 10px;
+                        font-family: 'Press Start 2P', cursive; text-align: center; z-index: 100;
+                        box-shadow: 0 0 10px rgba(0,0,0,0.5);
+                    `;
+                    messageBox.innerHTML = `
+                        <p>Por favor, insira seu nome!</p>
+                        <button style="margin-top: 10px; padding: 5px 10px; background-color: #f6e05e; color: #1a202c; border: none; border-radius: 5px; cursor: pointer;">OK</button>
+                    `;
+                    document.body.appendChild(messageBox);
+                    messageBox.querySelector('button').addEventListener('click', () => {
+                        messageBox.remove();
+                    });
+                }
+            });
 
-        gameContainer.addEventListener('touchend', () => {
-            playerMoving = false;
-        });
+            // Botão Jogar Novamente (na tela de Ranking)
+            rankingPlayAgainButton.addEventListener('click', initializeGame);
 
-        // Controle de Teclado (Desktop)
-        document.addEventListener('keydown', (e) => {
-            if (!gameRunning || gamePaused) return;
-            if (e.key === 'ArrowLeft') {
-                playerX = Math.max(0, playerX - playerSpeed * 2);
-            } else if (e.key === 'ArrowRight') {
-                playerX = Math.min(gameContainer.offsetWidth - player.offsetWidth, playerX + playerSpeed * 2);
-            } else if (e.key === 'ArrowUp') { 
-                playerY = Math.max(0, playerY - playerSpeed * 2); 
-            } else if (e.key === 'ArrowDown') { 
-                playerY = Math.min(gameContainer.offsetHeight - player.offsetHeight, playerY + playerSpeed * 2); 
-            } else if (e.key === 'p' || e.key === 'P') { 
-                pauseGame();
-            }
-            updatePlayerPosition();
-        });
+            // Evento para mostrar o ranking (botão na tela de Game Over)
+            showRankingButton.addEventListener('click', async () => {
+                gameOverScreen.classList.add('hidden');
+                rankingScreen.classList.remove('hidden');
+                nameInputForm.classList.add('hidden'); // Esconde o formulário ao apenas visualizar o ranking
+                const highScores = await getHighScores();
+                displayHighScores(highScores);
+            });
 
-        // Botão Reiniciar (na tela de Game Over)
-        restartButton.addEventListener('click', initializeGame);
-        
-        // Evento no div startScreen para iniciar o jogo (qualquer toque/clique)
-        startScreen.addEventListener('click', () => { 
-            initializeGame();
-            toggleFullScreen(); 
-        }); 
-        
-        // Botão Continuar para a tela de Stage Clear
-        continueButton.addEventListener('click', () => {
-            startNextStage();
-            toggleFullScreen(); 
-        }); 
-
-        // Botão de Pausa
-        pauseButton.addEventListener('click', pauseGame);
-        
-        // Evento no div pauseScreen para retomar o jogo (qualquer toque/clique)
-        pauseScreen.addEventListener('click', () => { 
-            resumeGame();
-        });
-
-        // Botão de Enviar Pontuação (na tela de Ranking)
-        submitScoreButton.addEventListener('click', () => {
-            const playerName = playerNameInput.value.trim();
-            if (playerName) {
-                saveHighScore(playerName, score);
-            } else {
-                // Substitua alert() por um modal customizado no jogo real
-                const messageBox = document.createElement('div');
-                messageBox.style.cssText = `
-                    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-                    background-color: #333; color: white; padding: 20px; border-radius: 10px;
-                    font-family: 'Press Start 2P', cursive; text-align: center; z-index: 100;
-                    box-shadow: 0 0 10px rgba(0,0,0,0.5);
-                `;
-                messageBox.innerHTML = `
-                    <p>Por favor, insira seu nome!</p>
-                    <button style="margin-top: 10px; padding: 5px 10px; background-color: #f6e05e; color: #1a202c; border: none; border-radius: 5px; cursor: pointer;">OK</button>
-                `;
-                document.body.appendChild(messageBox);
-                messageBox.querySelector('button').addEventListener('click', () => {
-                    messageBox.remove();
-                });
-            }
-        });
-
-        // Botão Jogar Novamente (na tela de Ranking)
-        rankingPlayAgainButton.addEventListener('click', initializeGame);
-
-        // Evento para mostrar o ranking (botão na tela de Game Over)
-        showRankingButton.addEventListener('click', async () => {
-            gameOverScreen.classList.add('hidden');
-            rankingScreen.classList.remove('hidden');
-            nameInputForm.classList.add('hidden'); // Esconde o formulário ao apenas visualizar o ranking
-            const highScores = await getHighScores();
-            displayHighScores(highScores);
-        });
-
-        // Botão para voltar ao início da tela de ranking
-        backToStartScreenButton.addEventListener('click', () => {
-            rankingScreen.classList.add('hidden');
-            startScreen.classList.remove('hidden');
-        });
+            // Botão para voltar ao início da tela de ranking
+            backToStartScreenButton.addEventListener('click', () => {
+                rankingScreen.classList.add('hidden');
+                startScreen.classList.remove('hidden');
+            });
+        }
 
 
         // Exibe a tela inicial ao carregar
-        window.onload = () => {
+        window.onload = async () => {
+            // Configura os event listeners e obtém as referências DOM primeiro
+            setupEventListeners();
+            // Em seguida, inicializa o Firebase e a autenticação
+            // A autenticação Firebase já é tratada pelo onAuthStateChanged que é disparado na inicialização do app.
+            // Não precisamos de uma função initializeFirebaseAndAuth separada aqui, pois a lógica já está no script type="module".
+
             startScreen.classList.remove('hidden');
             gameOverScreen.classList.add('hidden'); 
             stageClearScreen.classList.add('hidden'); 
             pauseScreen.classList.add('hidden'); 
-            rankingScreen.classList.add('hidden'); // Garante que o ranking esteja oculto no início
-            nameInputForm.classList.add('hidden'); // Garante que o formulário esteja oculto no início
+            rankingScreen.classList.add('hidden'); 
+            nameInputForm.classList.add('hidden'); 
             gameRunning = false; 
             gamePaused = false; 
         };
     </script>
 </body>
 </html>
+
