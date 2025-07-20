@@ -812,7 +812,7 @@
         const baseObstacleSpawnInterval = 2500; 
         let backgroundScrollSpeed = 2; 
 
-        // Velocidades e intervalos ajustados (podem ser modificados pela dificuldade)
+        // Velocidades e intervalos ajustados (can be modified by difficulty)
         let currentEnemyMovementSpeed = baseEnemyMovementSpeed * 0.8 * 0.7; 
         let currentEnemyBulletSpeed = baseEnemyBulletSpeed * 1.4;     
         let collectibleMovementSpeed = 0; 
@@ -824,7 +824,7 @@
         let obstacles = []; 
         let animationFrameId;
 
-        // Variáveis de tiro do jogador
+        // Player shooting variables
         let bullets = []; 
         let bulletSpeed = 10; 
         let shootInterval = 300; 
@@ -833,12 +833,12 @@
         let slantedBulletsActive = false; 
         let sideShotsLevel = 0; 
 
-        // Variáveis de coletáveis
+        // Collectible variables
         let collectibles = []; 
         let collectibleDropChance = 0.07; 
         const collectibleStationaryDuration = 5000; 
 
-        // Variáveis do Boss
+        // Boss variables
         let boss = null;
         let bossHealth = 0;
         const initialBossHealth = 200; 
@@ -858,28 +858,28 @@
         let lastBossPowerUpDropTime = 0; 
         const bossFightPowerUpInterval = 10000; 
 
-        // Valores de rotação de matiz do Boss para diferentes níveis
+        // Boss hue rotation values for different levels
         const bossHueRotations = [0, 90, 180, 270, 30]; 
 
-        // Variável de nível do jogador
+        // Player level variable
         let playerLevel = 1;
 
-        // Variáveis de bala do inimigo
+        // Enemy bullet variables
         let enemyBullets = []; 
 
-        // Variáveis de obstáculo
+        // Obstacle variables
         const obstacleDamage = 20; 
         let lastObstacleSpawnTime = 0;
 
-        // Variáveis do Escudo
+        // Shield variables
         let shieldActive = false;
         let shieldHealth = 0;
         const maxShieldHealth = 100;
 
-        // Variável para controlar se um heavy enemy está na tela
+        // Variable to control if a heavy enemy is on screen
         let isHeavyEnemyOnScreen = false; 
 
-        // Definição do novo inimigo pesado
+        // Definition of the new heavy enemy
         const heavyEnemyDefinition = {
             type: 'heavy_enemy',
             hits: 100, 
@@ -888,26 +888,26 @@
             height: 72, 
             speed: 1.95, 
             shootInterval: 1000, 
-            baseBulletDamage: 20, /* AUMENTADO PARA 20 */
+            baseBulletDamage: 20, 
             hueRotations: [0, 90, 180] 
         };
 
-        // Dano base das balas inimigas (para escalonamento)
+        // Base damage of enemy bullets (for scaling)
         const baseEnemyBulletDamage = 10; 
 
-        // Tipos de power-ups com cores neon
+        // Power-up types with neon colors
         const powerUpTypes = [
-            { type: 'damage_1', text: '+1', color: '#00FFFF', damageIncrease: 1, sprite: 'https://i.ibb.co/tpmGNwnx/file-00000000c23c61f79d81df79065596e4.png', hueRotate: 140 }, // Ciano neon
-            { type: 'side_bullets', text: '>>', color: '#FF00FF', damageIncrease: 0, sprite: 'https://i.ibb.co/6JGv0Nk7/file-00000000f4c461f7a9330c93bf5d848c.png', hueRotate: 50 }, // Magenta neon
-            { type: 'shield', text: 'ESC', color: '#00FF00', damageIncrease: 0, sprite: 'https://i.ibb.co/HfN8Wkv3/file-00000000553861f78733587cf43f0566.png', hueRotate: 240 }, // Verde neon
+            { type: 'damage_1', text: '+1', color: '#00FFFF', damageIncrease: 1, sprite: 'https://i.ibb.co/tpmGNwnx/file-00000000c23c61f79d81df79065596e4.png', hueRotate: 140 }, 
+            { type: 'side_bullets', text: '>>', color: '#FF00FF', damageIncrease: 0, sprite: 'https://i.ibb.co/6JGv0Nk7/file-00000000f4c461f7a9330c93bf5d848c.png', hueRotate: 50 }, 
+            { type: 'shield', text: 'ESC', color: '#00FF00', damageIncrease: 0, sprite: 'https://i.ibb.co/HfN8Wkv3/file-00000000553861f78733587cf43f0566.png', hueRotate: 240 }, 
         ];
-        // Novo tipo de power-up de vida (adicionado separadamente para controle de spawn)
-        const healthPowerUpType = { type: 'health_up', text: '❤️', color: '#FFFF00', healthIncrease: 20, sprite: 'https://i.ibb.co/RpmCgPyD/file-00000000fdf061f59a3de32e7e743922-1.png', hueRotate: 50 }; // Amarelo neon
+        // New health power-up type (added separately for spawn control)
+        const healthPowerUpType = { type: 'health_up', text: '❤️', color: '#FFFF00', healthIncrease: 20, sprite: 'https://i.ibb.co/RpmCgPyD/file-00000000fdf061f59a3de32e7e743922-1.png', hueRotate: 50 }; 
 
-        // Tipo de debuff
-        const debuffType = { type: 'damage_down', text: '-1', color: '#FF4500', damageDecrease: 1, sprite: 'https://i.ibb.co/FbvqcCqK/file-000000007ee861fdb4cec6e89e0ac0ba.png', hueRotate: 30 }; // Laranja avermelhado
+        // Debuff type
+        const debuffType = { type: 'damage_down', text: '-1', color: '#FF4500', damageDecrease: 1, sprite: 'https://i.ibb.co/FbvqcCqK/file-000000007ee861fdb4cec6e89e0ac0ba.png', hueRotate: 30 }; 
 
-        // Tipos de inimigos e suas propriedades (hits necessários, cor base, rotação de matiz)
+        // Enemy types and their properties (hits needed, base color, hue rotation)
         const enemyTypes = [
             { scoreThreshold: 0, hits: 1, hueRotate: 0, sprite: 'https://i.ibb.co/TMFR5810/file-00000000646c61f8b1feda6cccc966af.png' }, 
             { scoreThreshold: 20, hits: 2, hueRotate: 60, sprite: 'https://i.ibb.co/TMFR5810/file-00000000646c61f8b1feda6cccc966af.png' }, 
@@ -916,7 +916,7 @@
             { scoreThreshold: 80, hits: 5, hueRotate: 240, sprite: 'https://i.ibb.co/TMFR5810/file-00000000646c61f8b1feda6cccc966af.png' }  
         ];
 
-        // Cores de fundo do cenário para indicar níveis avançados (mais coloridas)
+        // Background colors for advanced levels (more colorful)
         const backgroundPresets = [
             'linear-gradient(to bottom, #4a90e2 0%, #2e6cb8 100%)', 
             'linear-gradient(to bottom, #7ed321 0%, #5cb82e 100%)', 
@@ -930,12 +930,12 @@
         let currentStageHueRotation = 0; 
         const stageHueRotationIncrement = 60; 
 
-        // Variáveis para controle de toque
+        // Touch control variables
         let touchStartX = 0;
         let touchStartY = 0; 
         let playerMoving = false;
 
-        // Referência ao elemento de áudio
+        // Audio element references
         const backgroundMusic = new Audio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3'); 
         backgroundMusic.loop = true; 
         backgroundMusic.volume = 0.5; 
@@ -951,7 +951,7 @@
         bossMusic.volume = 0.6;
 
         /**
-         * Solicita o modo tela cheia para o documento.
+         * Requests fullscreen mode for the document.
          */
         function toggleFullScreen() {
             const element = document.documentElement; 
@@ -968,7 +968,7 @@
         }
 
         /**
-         * Atualiza as estatísticas do jogador com base no nível atual.
+         * Updates player stats based on current level.
          */
         function updatePlayerStatsBasedOnLevel() {
             maxHealth = 100 + (playerLevel - 1) * 20; 
@@ -977,7 +977,7 @@
         }
 
         /**
-         * Inicializa o estado do jogo para um novo jogo.
+         * Initializes the game state for a new game.
          */
         function initializeGame() {
             score = 0;
@@ -1008,7 +1008,7 @@
             playerLevelDisplay.textContent = playerLevel; 
             updateBossProgressBar(); 
 
-            // Reinicializa as velocidades e intervalos para os valores base ajustados
+            // Reinitialize speeds and intervals to adjusted base values
             currentEnemyMovementSpeed = baseEnemyMovementSpeed * 0.8 * 0.7; 
             currentEnemyBulletSpeed = baseEnemyBulletSpeed * 1.4;
             currentObstacleSpawnInterval = baseObstacleSpawnInterval; 
@@ -1031,7 +1031,7 @@
             player.style.left = `${playerX}px`;
             player.style.bottom = `${20}px`; 
 
-            // Inicializa os segmentos de fundo
+            // Initialize background segments
             backgroundSegments[0].style.top = '0px';
             backgroundSegments[1].style.top = `${-gameContainer.offsetHeight}px`; 
             backgroundSegments[0].classList.remove('rotated-180');
@@ -1045,13 +1045,13 @@
             startGameLoop();
             console.log('initializeGame: isBossFightActive =', isBossFightActive); 
 
-            backgroundMusic.play().catch(e => console.log("Erro ao tentar tocar música:", e)); 
+            backgroundMusic.play().catch(e => console.log("Error playing music:", e)); 
             bossMusic.pause(); 
             bossMusic.currentTime = 0;
         }
 
         /**
-         * Prepara o jogo para o próximo estágio.
+         * Prepares the game for the next stage.
          */
         function startNextStage() {
             isBossFightActive = false; 
@@ -1090,13 +1090,13 @@
             lastObstacleSpawnTime = performance.now(); 
             startGameLoop();
 
-            backgroundMusic.play().catch(e => console.log("Erro ao tentar tocar música:", e)); 
+            backgroundMusic.play().catch(e => console.log("Error playing music:", e)); 
             bossMusic.pause(); 
             bossMusic.currentTime = 0;
         }
 
         /**
-         * Limpa todos os elementos de jogo (inimigos, balas, coletáveis, etc.).
+         * Clears all game elements (enemies, bullets, collectibles, etc.).
          */
         function clearGameElements() {
             // Remove elementos do DOM e limpa arrays
@@ -1117,7 +1117,8 @@
             }
             const existingBossHealthBarWrapper = document.getElementById('bossHealthBarWrapper');
             if (existingBossHealthBarWrapper) {
-                if(existingBossHealthBarWrapper.parentNode) existingBossBarWrapper.parentNode.removeChild(existingBossHealthBarWrapper);
+                // CORRIGIDO: Typo here. Was existingBossBarWrapper.parentNode.removeChild
+                if(existingBossHealthBarWrapper.parentNode) existingBossHealthBarWrapper.parentNode.removeChild(existingBossHealthBarWrapper);
             }
             bossBullets.forEach(b => { if(b.parentNode) b.parentNode.removeChild(b); });
             bossBullets = [];
@@ -1125,7 +1126,7 @@
         }
 
         /**
-         * Atualiza a posição do jogador.
+         * Updates player position.
          */
         function updatePlayerPosition() {
             player.style.left = `${playerX}px`;
@@ -1133,10 +1134,10 @@
         }
 
         /**
-         * Verifica se dois retângulos se sobrepõem.
-         * @param {Object} rect1 - Primeiro retângulo {left, top, width, height}.
-         * @param {Object} rect2 - Segundo retângulo {left, top, width, height}.
-         * @returns {boolean} True se houver sobreposição, false caso contrário.
+         * Checks if two rectangles overlap.
+         * @param {Object} rect1 - First rectangle {left, top, width, height}.
+         * @param {Object} rect2 - Second rectangle {left, top, width, height}.
+         * @returns {boolean} True if overlapping, false otherwise.
          */
         function isOverlapping(rect1, rect2) {
             return rect1.left < rect2.left + rect2.width &&
@@ -1146,10 +1147,10 @@
         }
 
         /**
-         * Cria um novo objeto em caída (inimigo) com dificuldade variável.
-         * @param {DOMHighResTimeStamp} currentTime - O tempo atual.
-         * @param {boolean} [isBossSummon=false] - Indica se o inimigo está sendo sumonado pelo boss.
-         * @param {Object} [bossStats=null] - Contém {health, damage} do boss se for sumonado por ele.
+         * Creates a new falling object (enemy) with variable difficulty.
+         * @param {DOMHighResTimeStamp} currentTime - The current time.
+         * @param {boolean} [isBossSummon=false] - Indicates if the enemy is being summoned by the boss.
+         * @param {Object} [bossStats=null] - Contains {health, damage} of the boss if summoned by it.
          */
         function createFallingObject(currentTime, isBossSummon = false, bossStats = null) {
             if (isHeavyEnemyOnScreen && !isBossSummon) {
@@ -2900,4 +2901,3 @@
     </script>
 </body>
 </html>
-
