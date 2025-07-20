@@ -345,6 +345,37 @@
             text-shadow: 2px 2px 4px rgba(0,0,0,0.8); /* Adiciona sombra para legibilidade */
         }
 
+        /* Estilo para o texto "PRESS START" piscando */
+        #pressStartText {
+            font-size: 1.5rem; /* Tamanho ajustado */
+            color: #f6e05e;
+            text-shadow: 0 0 8px rgba(246, 224, 94, 0.8);
+            animation: blink 1s infinite;
+            margin-top: 20px; /* Adiciona um pouco de espaço */
+        }
+
+        @keyframes blink {
+            0% { opacity: 0; }
+            50% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        .pause-screen {
+            background-image: url('https://i.ibb.co/JjxJVM6D/1753025379623.png'); /* MESMA IMAGEM DA TELA INICIAL */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        /* Estilo para o texto "CONTINUAR" na tela de pausa */
+        #pauseContinueText {
+            font-size: 1.5rem; /* Tamanho ajustado */
+            color: #f6e05e;
+            text-shadow: 0 0 8px rgba(246, 224, 94, 0.8);
+            margin-bottom: 20px; /* Espaço para o botão */
+        }
+
+
         .game-over-screen h1, .start-screen h1, .stage-clear-screen h1, .pause-screen h1 {
             font-size: 1.8rem;
             margin-bottom: 1rem;
@@ -557,9 +588,10 @@
                     </div>
 
                     <div class="start-screen" id="startScreen">
-                        <h1>TIRO NO METRÔ</h1>
-                        <p>Clique para iniciar e entrar em tela cheia!</p>
-                        <button class="start-button" id="startButton">INICIAR JOGO</button>
+                        <!-- Removido: <h1>TIRO NO METRÔ</h1> -->
+                        <!-- Removido: <p>Clique para iniciar e entrar em tela cheia!</p> -->
+                        <p id="pressStartText">PRESS START</p> <!-- Texto "PRESS START" piscando -->
+                        <!-- Removido: <button class="start-button" id="startButton">INICIAR JOGO</button> -->
                     </div>
 
                     <div class="game-over-screen hidden" id="gameOverScreen">
@@ -575,9 +607,10 @@
                     </div>
 
                     <div class="pause-screen hidden" id="pauseScreen">
-                        <h1>PAUSADO</h1>
-                        <p>O jogo está pausado.</p>
-                        <button class="resume-button" id="resumeButton">CONTINUAR JOGO</button>
+                        <!-- Removido: <h1>PAUSADO</h1> -->
+                        <!-- Removido: <p>O jogo está pausado.</p> -->
+                        <p id="pauseContinueText">CONTINUAR</p> <!-- Texto "CONTINUAR" -->
+                        <!-- Removido: <button class="resume-button" id="resumeButton">CONTINUAR JOGO</button> -->
                     </div>
 
                     <!-- Botão de Pausa movido para dentro de game-container -->
@@ -621,18 +654,17 @@
         const finalScoreDisplay = document.getElementById('finalScore');
         const restartButton = document.getElementById('restartButton');
         const startScreen = document.getElementById('startScreen');
-        const startButton = document.getElementById('startButton');
+        // const startButton = document.getElementById('startButton'); // REMOVIDO
         const stageClearScreen = document.getElementById('stageClearScreen'); 
-        const stageScoreDisplay = document.getElementById('stageScore');     
         const continueButton = document.getElementById('continueButton');   
         const pauseButton = document.getElementById('pauseButton'); 
         const pauseScreen = document.getElementById('pauseScreen'); 
-        const resumeButton = document.getElementById('resumeButton'); 
+        // const resumeButton = document.getElementById('resumeButton'); // REMOVIDO
 
         // Referências aos novos elementos da UI
         const playerHealthBar = document.getElementById('playerHealthBar'); 
         const healthFill = document.getElementById('healthFill'); 
-        const overshieldFill = document.getElementById('overshieldFill'); // NOVO: Referência à barra de sobrevida
+        const overshieldFill = document.getElementById('overshieldFill'); 
         const playerHealthText = document.getElementById('playerHealthText'); 
 
         const shieldHealthBar = document.getElementById('shieldHealthBar'); 
@@ -641,6 +673,10 @@
 
         const bossProgressText = document.getElementById('bossProgressText');
         const bossProgressFill = document.getElementById('bossProgressFill');
+
+        // Referências aos novos elementos de texto da UI
+        const pressStartText = document.getElementById('pressStartText'); 
+        const pauseContinueText = document.getElementById('pauseContinueText'); 
 
         // Segmentos de fundo
         const bgSegment1 = document.getElementById('bgSegment1');
@@ -651,7 +687,7 @@
         let score = 0;
         let health = 0; 
         let maxHealth = 100; 
-        let maxOvershieldHealth = 200; // NOVO: Vida máxima com sobrevida
+        let maxOvershieldHealth = 200; 
         let gameRunning = false;
         let playerX; 
         let playerY; 
@@ -824,9 +860,7 @@
          */
         function updatePlayerStatsBasedOnLevel() {
             maxHealth = 100 + (playerLevel - 1) * 20; 
-            // maxOvershieldHealth também precisa escalar com o nível, se desejado.
-            // Por simplicidade, mantive 200, mas poderia ser:
-            // maxOvershieldHealth = maxHealth + 100;
+            maxOvershieldHealth = maxHealth * 2; // O máximo da sobrevida é o dobro da vida máxima
             bulletDamage = 1 + (playerLevel - 1); 
         }
 
@@ -839,7 +873,7 @@
             bossLevel = 0; 
             nextBossScoreThreshold = 50; 
             currentStageHueRotation = 0; 
-            document.documentElement.style.setProperty('--stage-hue-rotation', `${currentStageHueRotation}deg`); /* APLICADO AQUI */
+            document.documentElement.style.setProperty('--stage-hue-rotation', `${currentStageHueRotation}deg`); 
 
             updatePlayerStatsBasedOnLevel(); 
             health = maxHealth; // Começa com vida cheia, sem sobrevida
@@ -932,7 +966,7 @@
             currentObstacleSpawnInterval = Math.max(1000, baseObstacleSpawnInterval - (bossLevel * 200)); 
 
             currentStageHueRotation = (currentStageHueRotation + stageHueRotationIncrement) % 360;
-            document.documentElement.style.setProperty('--stage-hue-rotation', `${currentStageHueRotation}deg`); /* APLICADO AQUI */
+            document.documentElement.style.setProperty('--stage-hue-rotation', `${currentStageHueRotation}deg`); 
 
             stageClearScreen.classList.add('hidden'); 
             gameRunning = true;
@@ -1034,7 +1068,7 @@
 
                 object.dataset.hitsRemaining = Math.max(1, Math.round(bossStats.health * 0.10)); 
                 object.dataset.initialHits = Math.max(1, Math.round(bossStats.health * 0.10));
-                object.dataset.baseBulletDamage = Math.max(1, Math.round(bossStats.damage * 0.10)); 
+                object.dataset.baseBulletDamage = selectedEnemyType.baseBulletDamage; // Usa o dano base do heavy enemy
                 object.dataset.isBossSummoned = 'true'; 
 
                 const chosenHueIndex = Math.floor(Math.random() * selectedEnemyType.hueRotations.length);
@@ -2520,7 +2554,7 @@
         // Botão Reiniciar
         restartButton.addEventListener('click', initializeGame);
         // Botão Iniciar para a tela inicial
-        startButton.addEventListener('click', () => {
+        startScreen.addEventListener('click', () => { // Evento no div startScreen
             initializeGame();
             toggleFullScreen(); 
         }); 
@@ -2533,7 +2567,9 @@
         // Botão de Pausa
         pauseButton.addEventListener('click', pauseGame);
         // Botão de Retomar na tela de pausa
-        resumeButton.addEventListener('click', resumeGame);
+        pauseScreen.addEventListener('click', () => { // Evento no div pauseScreen
+            resumeGame();
+        });
 
         // Exibe a tela inicial ao carregar
         window.onload = () => {
