@@ -315,7 +315,7 @@
             100% { box-shadow: 0 0 5px rgba(255, 255, 255, 0.5), 0 0 10px var(--neon-color, #00f), 0 0 15px var(--neon-color, #00f); }
         }
 
-        .game-over-screen, .start-screen, .stage-clear-screen, .pause-screen {
+        .game-over-screen, .start-screen, .stage-clear-screen, .pause-screen, .ranking-screen { /* Adicionado .ranking-screen */
             position: absolute;
             top: 0;
             left: 0;
@@ -360,7 +360,7 @@
             100% { opacity: 0; }
         }
 
-        .pause-screen {
+        .pause-screen, .ranking-screen { /* Adicionado .ranking-screen */
             background-image: url('https://i.ibb.co/JjxJVM6D/1753025379623.png'); /* MESMA IMAGEM DA TELA INICIAL */
             background-size: cover;
             background-position: center;
@@ -373,6 +373,79 @@
             color: #f6e05e;
             text-shadow: 0 0 8px rgba(246, 224, 94, 0.8);
             margin-bottom: 20px; /* Espaço para o botão */
+        }
+
+        /* Estilos para a tela de Ranking */
+        .ranking-screen h1 {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            color: #48bb78; /* Verde para o título do ranking */
+            text-shadow: 0 0 10px rgba(72, 187, 120, 0.8);
+        }
+
+        .ranking-screen ul {
+            list-style: none;
+            padding: 0;
+            margin: 1rem 0 2rem 0;
+            width: 80%;
+            max-width: 300px;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 0.5rem;
+            border: 2px solid #4a5568;
+        }
+
+        .ranking-screen li {
+            padding: 0.5rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: #cbd5e0;
+            border-bottom: 1px solid rgba(74, 85, 104, 0.5);
+        }
+
+        .ranking-screen li:last-child {
+            border-bottom: none;
+        }
+
+        .ranking-input-form {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            align-items: center;
+            margin-top: 1rem;
+        }
+
+        .ranking-input-form input[type="text"] {
+            background-color: #2d3748;
+            border: 2px solid #4a5568;
+            border-radius: 0.5rem;
+            padding: 0.6rem 1rem;
+            color: #cbd5e0;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            text-align: center;
+            outline: none;
+        }
+
+        .ranking-input-form input::placeholder {
+            color: #a0aec0;
+        }
+
+        .ranking-input-form button {
+            background-color: #f6e05e;
+            color: #1a202c;
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+        }
+
+        .ranking-input-form button:hover {
+            background-color: #d69e2e;
+            transform: translateY(-2px);
         }
 
 
@@ -388,7 +461,7 @@
             margin-bottom: 0.5rem;
         }
 
-        .restart-button, .start-button, .continue-button, .pause-button-style, .resume-button { /* Renomeado para evitar conflito com ID */
+        .restart-button, .start-button, .continue-button, .pause-button-style, .resume-button, .submit-score-button, .ranking-play-again-button { /* Adicionado submit-score-button, ranking-play-again-button */
             background-color: #48bb78;
             color: white;
             padding: 1rem 2rem;
@@ -404,13 +477,13 @@
             letter-spacing: 1px;
         }
 
-        .restart-button:hover, .start-button:hover, .continue-button:hover, .pause-button-style:hover, .resume-button:hover {
+        .restart-button:hover, .start-button:hover, .continue-button:hover, .pause-button-style:hover, .resume-button:hover, .submit-score-button:hover, .ranking-play-again-button:hover {
             background-color: #38a169;
             transform: translateY(-3px);
             box-shadow: 0 8px 16px rgba(72, 187, 120, 0.6);
         }
 
-        .restart-button:active, .start-button:active, .continue-button:active, .pause-button-style:active, .resume-button:active {
+        .restart-button:active, .start-button:active, .continue-button:active, .pause-button-style:active, .resume-button:active, .submit-score-button:active, .ranking-play-again-button:active {
             transform: translateY(0);
             box-shadow: 0 3px 6px rgba(72, 187, 120, 0.4);
         }
@@ -588,10 +661,7 @@
                     </div>
 
                     <div class="start-screen" id="startScreen">
-                        <!-- Removido: <h1>TIRO NO METRÔ</h1> -->
-                        <!-- Removido: <p>Clique para iniciar e entrar em tela cheia!</p> -->
                         <p id="pressStartText">PRESS START</p> <!-- Texto "PRESS START" piscando -->
-                        <!-- Removido: <button class="start-button" id="startButton">INICIAR JOGO</button> -->
                     </div>
 
                     <div class="game-over-screen hidden" id="gameOverScreen">
@@ -607,10 +677,21 @@
                     </div>
 
                     <div class="pause-screen hidden" id="pauseScreen">
-                        <!-- Removido: <h1>PAUSADO</h1> -->
-                        <!-- Removido: <p>O jogo está pausado.</p> -->
                         <p id="pauseContinueText">CONTINUAR</p> <!-- Texto "CONTINUAR" -->
-                        <!-- Removido: <button class="resume-button" id="resumeButton">CONTINUAR JOGO</button> -->
+                    </div>
+
+                    <!-- Nova tela de ranking -->
+                    <div class="ranking-screen hidden" id="rankingScreen">
+                        <h1>TOP 10 PONTUAÇÕES</h1>
+                        <ul id="highScoresList">
+                            <!-- Itens do ranking serão inseridos aqui pelo JS -->
+                        </ul>
+                        <div class="ranking-input-form hidden" id="nameInputForm">
+                            <p>Parabéns! Você entrou no Top 10!</p>
+                            <input type="text" id="playerNameInput" placeholder="Seu nome" maxlength="10">
+                            <button id="submitScoreButton">Enviar Pontuação</button>
+                        </div>
+                        <button class="ranking-play-again-button" id="rankingPlayAgainButton">JOGAR NOVAMENTE</button>
                     </div>
 
                     <!-- Botão de Pausa movido para dentro de game-container -->
@@ -643,7 +724,57 @@
         </div>
     </div>
 
-    <script>
+    <script type="module">
+        // Firebase Imports
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyAv0ptf_r0wd4smm24uJBIpUtKuSNVr5iY",
+            authDomain: "navizinhas.firebaseapp.com",
+            projectId: "navizinhas",
+            storageBucket: "navizinhas.firebasestorage.app",
+            messagingSenderId: "890224253385",
+            appId: "1:890224253385:web:34f00091c09694aab43018",
+            measurementId: "G-GE8MVDE7TV"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        let userId = null;
+        // __app_id é fornecido pelo ambiente Canvas, se disponível.
+        // Caso contrário, usamos o projectId do FirebaseConfig como um fallback seguro.
+        const appId = typeof __app_id !== 'undefined' ? __app_id : firebaseConfig.projectId;
+
+
+        // Authenticate anonymously
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                userId = user.uid;
+                console.log("Firebase authenticated. User ID:", userId);
+            } else {
+                try {
+                    // __initial_auth_token é fornecido pelo ambiente Canvas para autenticação customizada.
+                    // Se não estiver disponível, fazemos login anonimamente.
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token !== null) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                    userId = auth.currentUser.uid;
+                    console.log("Firebase authenticated anonymously. User ID:", userId);
+                } catch (error) {
+                    console.error("Firebase authentication error:", error);
+                }
+            }
+        });
+
+
         // Referências aos elementos DOM
         const gameContainer = document.getElementById('gameContainer');
         const player = document.getElementById('player');
@@ -654,12 +785,10 @@
         const finalScoreDisplay = document.getElementById('finalScore');
         const restartButton = document.getElementById('restartButton');
         const startScreen = document.getElementById('startScreen');
-        // const startButton = document.getElementById('startButton'); // REMOVIDO
         const stageClearScreen = document.getElementById('stageClearScreen'); 
         const continueButton = document.getElementById('continueButton');   
         const pauseButton = document.getElementById('pauseButton'); 
         const pauseScreen = document.getElementById('pauseScreen'); 
-        // const resumeButton = document.getElementById('resumeButton'); // REMOVIDO
 
         // Referências aos novos elementos da UI
         const playerHealthBar = document.getElementById('playerHealthBar'); 
@@ -677,6 +806,15 @@
         // Referências aos novos elementos de texto da UI
         const pressStartText = document.getElementById('pressStartText'); 
         const pauseContinueText = document.getElementById('pauseContinueText'); 
+
+        // Ranking UI elements
+        const rankingScreen = document.getElementById('rankingScreen');
+        const highScoresList = document.getElementById('highScoresList');
+        const nameInputForm = document.getElementById('nameInputForm');
+        const playerNameInput = document.getElementById('playerNameInput');
+        const submitScoreButton = document.getElementById('submitScoreButton');
+        const rankingPlayAgainButton = document.getElementById('rankingPlayAgainButton');
+
 
         // Segmentos de fundo
         const bgSegment1 = document.getElementById('bgSegment1');
@@ -911,6 +1049,8 @@
             startScreen.classList.add('hidden'); 
             stageClearScreen.classList.add('hidden'); 
             pauseScreen.classList.add('hidden'); 
+            rankingScreen.classList.add('hidden'); // Esconde a tela de ranking
+            nameInputForm.classList.add('hidden'); // Esconde o formulário de nome
 
             playerX = gameContainer.offsetWidth / 2 - player.offsetWidth / 2;
             playerY = gameContainer.offsetHeight - player.offsetHeight - 20; 
@@ -1731,9 +1871,11 @@
                         if (eBullet.dataset.isHeavyBullet === 'true') {
                             // Pega o dano base diretamente do dataset da bala do heavy enemy
                             damageToApply = parseFloat(eBullet.dataset.baseBulletDamage);
+                            console.log("Heavy enemy bullet hit! Base Damage:", damageToApply); // DEBUG
                         } else {
                             // Usa o dano base para inimigos normais
                             damageToApply = baseEnemyBulletDamage;
+                            console.log("Normal enemy bullet hit! Base Damage:", damageToApply); // DEBUG
                         }
                         // Aplica o escalonamento de nível do boss ao dano
                         damageToApply *= (1 + bossLevel * 0.10);
@@ -1742,6 +1884,7 @@
                             console.error("Calculated damageToApply is NaN in updateEnemyBullets. Defaulting to 0.");
                             damageToApply = 0;
                         }
+                        console.log("Final Damage to Apply:", damageToApply); // DEBUG
                         
                         // Lógica de dano: Escudo > Sobrevida > Vida
                         if (shieldActive) {
@@ -1950,7 +2093,7 @@
                     const baseHealthPercentage = 100; // Vida base sempre cheia (100%)
                     const overshieldAmount = health - maxHealth;
                     // Calcula a porcentagem da sobrevida em relação ao total de sobrevida possível
-                    const overshieldMaxPossible = maxOvershieldHealth - maxHealth; // Isso é 100 (200 - 100)
+                    const overshieldMaxPossible = maxOvershieldHealth - maxHealth; 
                     const overshieldPercentage = (overshieldAmount / overshieldMaxPossible) * 100;
 
                     healthFill.style.backgroundColor = '#48bb78'; /* Verde para vida base cheia */
@@ -2344,6 +2487,7 @@
         function handleBossDefeated() {
             gameRunning = false;
             cancelAnimationFrame(animationFrameId);
+            clearGameElements(); // Limpa todos os elementos após a derrota do boss
             console.log('handleBossDefeated: gameRunning = false, isBossFightActive =', isBossFightActive); 
 
             score += 50; 
@@ -2462,15 +2606,40 @@
         /**
          * Exibe a tela de Fim de Jogo.
          */
-        function showGameOverScreen() {
+        async function showGameOverScreen() {
             gameRunning = false;
             cancelAnimationFrame(animationFrameId);
+            clearGameElements(); // Garante que todos os elementos sejam removidos ao game over
             finalScoreDisplay.textContent = score;
-            gameOverScreen.classList.remove('hidden');
             backgroundMusic.pause(); 
             backgroundMusic.currentTime = 0; 
             bossMusic.pause(); 
             bossMusic.currentTime = 0;
+
+            // Lógica de Ranking
+            const highScores = await getHighScores();
+            let isTop10 = false;
+            if (highScores.length < 10) {
+                isTop10 = true;
+            } else {
+                // Check if current score is higher than the lowest score in top 10
+                const lowestTop10Score = highScores[highScores.length - 1].score;
+                if (score > lowestTop10Score) {
+                    isTop10 = true;
+                }
+            }
+
+            if (isTop10) {
+                gameOverScreen.classList.add('hidden'); // Esconde Game Over
+                rankingScreen.classList.remove('hidden'); // Mostra Ranking
+                nameInputForm.classList.remove('hidden'); // Mostra formulário de nome
+                playerNameInput.value = ''; // Limpa o input
+                playerNameInput.focus(); // Foca no input
+                displayHighScores(highScores); // Exibe o ranking atual
+            } else {
+                gameOverScreen.classList.remove('hidden'); // Mostra Game Over
+                rankingScreen.classList.add('hidden'); // Esconde Ranking
+            }
         }
 
         /**
@@ -2501,6 +2670,80 @@
                 }
             }
         }
+
+        // --- Firestore Functions ---
+
+        /**
+         * Salva uma nova pontuação no Firestore.
+         * @param {string} name - Nome do jogador.
+         * @param {number} score - Pontuação do jogador.
+         */
+        async function saveHighScore(name, score) {
+            if (!userId) {
+                console.error("User not authenticated. Cannot save high score.");
+                // Fallback: if authentication fails, still allow playing without ranking.
+                // Or, you could prompt the user to try again/check internet.
+                return;
+            }
+            try {
+                // Use o appId para criar um caminho de coleção único para este aplicativo.
+                const scoresCollectionRef = collection(db, `artifacts/${appId}/public/data/highScores`);
+                await addDoc(scoresCollectionRef, {
+                    name: name,
+                    score: score,
+                    timestamp: Date.now(), // Para ordenar por data, se necessário
+                    userId: userId // Armazena o ID do usuário
+                });
+                console.log("High score saved successfully!");
+                // Após salvar, atualiza a lista de pontuações
+                const updatedHighScores = await getHighScores();
+                displayHighScores(updatedHighScores);
+                nameInputForm.classList.add('hidden'); // Esconde o formulário após o envio
+            } catch (e) {
+                console.error("Error adding document: ", e);
+            }
+        }
+
+        /**
+         * Busca as 10 maiores pontuações do Firestore.
+         * @returns {Array<Object>} Um array de objetos de pontuação.
+         */
+        async function getHighScores() {
+            try {
+                const scoresCollectionRef = collection(db, `artifacts/${appId}/public/data/highScores`);
+                // Ordena por score em ordem decrescente e limita a 10 resultados
+                const q = query(scoresCollectionRef, orderBy("score", "desc"), limit(10));
+                const querySnapshot = await getDocs(q);
+                const scores = [];
+                querySnapshot.forEach((doc) => {
+                    scores.push(doc.data());
+                });
+                return scores;
+            } catch (e) {
+                console.error("Error getting documents: ", e);
+                return [];
+            }
+        }
+
+        /**
+         * Exibe as pontuações na lista de ranking.
+         * @param {Array<Object>} scores - Array de objetos de pontuação.
+         */
+        function displayHighScores(scores) {
+            highScoresList.innerHTML = ''; // Limpa a lista anterior
+            if (scores.length === 0) {
+                const li = document.createElement('li');
+                li.textContent = "Nenhuma pontuação ainda.";
+                highScoresList.appendChild(li);
+                return;
+            }
+            scores.forEach((scoreData, index) => {
+                const li = document.createElement('li');
+                li.innerHTML = `<span>${index + 1}. ${scoreData.name || 'Anônimo'}</span><span>${scoreData.score}</span>`;
+                highScoresList.appendChild(li);
+            });
+        }
+
 
         // --- Eventos de Controle ---
 
@@ -2551,13 +2794,15 @@
             updatePlayerPosition();
         });
 
-        // Botão Reiniciar
+        // Botão Reiniciar (na tela de Game Over)
         restartButton.addEventListener('click', initializeGame);
-        // Botão Iniciar para a tela inicial
-        startScreen.addEventListener('click', () => { // Evento no div startScreen
+        
+        // Evento no div startScreen para iniciar o jogo (qualquer toque/clique)
+        startScreen.addEventListener('click', () => { 
             initializeGame();
             toggleFullScreen(); 
         }); 
+        
         // Botão Continuar para a tela de Stage Clear
         continueButton.addEventListener('click', () => {
             startNextStage();
@@ -2566,10 +2811,55 @@
 
         // Botão de Pausa
         pauseButton.addEventListener('click', pauseGame);
-        // Botão de Retomar na tela de pausa
-        pauseScreen.addEventListener('click', () => { // Evento no div pauseScreen
+        
+        // Evento no div pauseScreen para retomar o jogo (qualquer toque/clique)
+        pauseScreen.addEventListener('click', () => { 
             resumeGame();
         });
+
+        // Botão de Enviar Pontuação (na tela de Ranking)
+        submitScoreButton.addEventListener('click', () => {
+            const playerName = playerNameInput.value.trim();
+            if (playerName) {
+                saveHighScore(playerName, score);
+            } else {
+                // Substitua alert() por um modal customizado no jogo real
+                const messageBox = document.createElement('div');
+                messageBox.style.cssText = `
+                    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                    background-color: #333; color: white; padding: 20px; border-radius: 10px;
+                    font-family: 'Press Start 2P', cursive; text-align: center; z-index: 100;
+                    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+                `;
+                messageBox.innerHTML = `
+                    <p>Por favor, insira seu nome!</p>
+                    <button style="margin-top: 10px; padding: 5px 10px; background-color: #f6e05e; color: #1a202c; border: none; border-radius: 5px; cursor: pointer;">OK</button>
+                `;
+                document.body.appendChild(messageBox);
+                messageBox.querySelector('button').addEventListener('click', () => {
+                    messageBox.remove();
+                });
+            }
+        });
+
+        // Botão Jogar Novamente (na tela de Ranking)
+        rankingPlayAgainButton.addEventListener('click', initializeGame);
+
+        // Evento para mostrar o ranking (botão na tela de Game Over)
+        showRankingButton.addEventListener('click', async () => {
+            gameOverScreen.classList.add('hidden');
+            rankingScreen.classList.remove('hidden');
+            nameInputForm.classList.add('hidden'); // Esconde o formulário ao apenas visualizar o ranking
+            const highScores = await getHighScores();
+            displayHighScores(highScores);
+        });
+
+        // Botão para voltar ao início da tela de ranking
+        backToStartScreenButton.addEventListener('click', () => {
+            rankingScreen.classList.add('hidden');
+            startScreen.classList.remove('hidden');
+        });
+
 
         // Exibe a tela inicial ao carregar
         window.onload = () => {
@@ -2577,6 +2867,8 @@
             gameOverScreen.classList.add('hidden'); 
             stageClearScreen.classList.add('hidden'); 
             pauseScreen.classList.add('hidden'); 
+            rankingScreen.classList.add('hidden'); // Garante que o ranking esteja oculto no início
+            nameInputForm.classList.add('hidden'); // Garante que o formulário esteja oculto no início
             gameRunning = false; 
             gamePaused = false; 
         };
