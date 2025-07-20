@@ -652,7 +652,6 @@
 <body>
     <div class="game-master-wrapper">
         <div class="main-game-layout">
-            <!-- Left Sidebar for Shield Bar -->
             <div class="sidebar-container left-sidebar">
                 <i class="fas fa-shield-alt sidebar-icon"></i>
                 <div class="sidebar-bar-wrapper">
@@ -664,7 +663,6 @@
             </div>
 
             <div class="game-area-wrapper">
-                <!-- Top Info Container for Player Stats -->
                 <div class="top-info-container">
                     <div class="info-item">
                         <i class="fas fa-fist-raised"></i>
@@ -688,15 +686,13 @@
                     </div>
 
                     <div class="start-screen" id="startScreen">
-                        <p id="pressStartText">PRESS START</p> <!-- Texto "PRESS START" piscando -->
-                    </div>
+                        <p id="pressStartText">PRESS START</p> </div>
 
                     <div class="game-over-screen hidden" id="gameOverScreen">
                         <h1>FIM DE JOGO!</h1>
                         <p>Sua Pontuação: <span id="finalScore">0</span></p>
                         <button class="restart-button" id="restartButton">JOGAR NOVAMENTE</button>
-                        <button class="screen-button" id="showRankingButton">VER RANKING</button> <!-- Botão adicionado -->
-                    </div>
+                        <button class="screen-button" id="showRankingButton">VER RANKING</button> </div>
 
                     <div class="stage-clear-screen hidden" id="stageClearScreen">
                         <h1>ESTÁGIO CONCLUÍDO!</h1>
@@ -705,19 +701,14 @@
                     </div>
 
                     <div class="pause-screen hidden" id="pauseScreen">
-                        <p id="pauseContinueText">PAUSADO</p> <!-- Alterado para PAUSADO -->
-                        <div id="pauseRankingDisplay">
-                            <!-- Ranking será inserido aqui dinamicamente -->
-                        </div>
-                        <p>Toque em qualquer lugar para continuar.</p> <!-- Instrução para o jogador -->
-                    </div>
+                        <p id="pauseContinueText">PAUSADO</p> <div id="pauseRankingDisplay">
+                            </div>
+                        <p>Toque em qualquer lugar para continuar.</p> </div>
 
-                    <!-- Nova tela de ranking -->
                     <div class="ranking-screen hidden" id="rankingScreen">
                         <h1>TOP 10 PONTUAÇÕES</h1>
                         <ul id="highScoresList">
-                            <!-- Itens do ranking serão inseridos aqui pelo JS -->
-                        </ul>
+                            </ul>
                         <div class="ranking-input-form hidden" id="nameInputForm">
                             <p>Parabéns! Você entrou no Top 10!</p>
                             <input type="text" id="playerNameInput" placeholder="Seu nome" maxlength="10">
@@ -726,11 +717,9 @@
                         <button class="ranking-play-again-button" id="rankingPlayAgainButton">JOGAR NOVAMENTE</button>
                     </div>
 
-                    <!-- Botão de Pausa movido para dentro de game-container -->
                     <button class="pause-button" id="pauseButton">PAUSAR</button>
                 </div>
 
-                <!-- Bottom Info Container for Boss Progress -->
                 <div class="bottom-info-container">
                     <i class="fas fa-dungeon"></i>
                     <span>Boss: <span id="bossProgressText">0 / 50</span></span>
@@ -740,14 +729,12 @@
                 </div>
             </div>
 
-            <!-- Right Sidebar for Health Bar -->
             <div class="sidebar-container right-sidebar">
                 <i class="fas fa-heart sidebar-icon"></i>
                 <div class="sidebar-bar-wrapper">
                     <div class="vertical-bar" id="playerHealthBar">
                         <div class="vertical-fill" id="healthFill"></div>
-                        <div class="vertical-overshield-fill" id="overshieldFill"></div> <!-- NOVO: Barra de sobrevida -->
-                        <span class="vertical-text" id="playerHealthText"></span>
+                        <div class="vertical-overshield-fill" id="overshieldFill"></div> <span class="vertical-text" id="playerHealthText"></span>
                     </div>
                 </div>
             </div>
@@ -2027,7 +2014,7 @@
 
                     let currentTop = parseFloat(obstacle.style.top);
                     if (isNaN(currentTop)) {
-                        currentTop = -45; 
+                        currentTop = 0; 
                         obstacle.style.top = `${currentTop}px`; 
                     }
                     obstacle.style.top = `${currentTop + currentEnemyMovementSpeed}px`; 
@@ -2626,6 +2613,9 @@
             console.log("Próximo Boss em: " + nextBossScoreThreshold + " pontos.");
 
             stageClearScreen.classList.remove('hidden'); 
+            // CORREÇÃO: Certificar-se de que o gameContainer está oculto para a tela de estágio aparecer limpa
+            gameContainer.classList.add('hidden'); // Oculta o gameContainer para mostrar a tela de estágio
+            
             bossMusic.pause(); 
             bossMusic.currentTime = 0;
             console.log('Exiting handleBossDefeated(). Stage Clear Screen shown.');
@@ -2641,7 +2631,9 @@
                     if (!segment) return; // Adicionado: Verificação de nulidade
 
                     const gameContainerHeight = gameContainer.offsetHeight; // Captura a altura dentro do loop para robustez
-                    const scrollSpeed = gamePaused ? 0 : backgroundScrollSpeed; // PAUSA O SCROLL SE O JOGO ESTIVER PAUSADO
+                    // CORREÇÃO: backgroundScrollSpeed deve ser constante durante a Boss fight para cenário rolar
+                    // A música não deve influenciar a rolagem.
+                    const scrollSpeed = gamePaused ? 0 : backgroundScrollSpeed; 
 
                     let currentTop = parseFloat(segment.style.top);
                     if (isNaN(currentTop)) { currentTop = 0; segment.style.top = `${currentTop}px`; }
@@ -2749,6 +2741,11 @@
             bossMusic.pause(); 
             bossMusic.currentTime = 0;
 
+            // Oculta gameContainer ao mostrar Game Over
+            if (gameContainer) {
+                gameContainer.classList.add('hidden');
+            }
+
             // Lógica de Ranking
             const highScores = await getHighScores();
             let isTop10 = false;
@@ -2791,6 +2788,11 @@
                 backgroundMusic.pause();
                 bossMusic.pause();
 
+                // Oculta gameContainer ao pausar
+                if (gameContainer) {
+                    gameContainer.classList.add('hidden');
+                }
+
                 // Exibir ranking na tela de pausa
                 const highScores = await getHighScores();
                 displayPauseRanking(highScores);
@@ -2804,6 +2806,10 @@
             if (gameRunning && gamePaused) {
                 gamePaused = false;
                 pauseScreen.classList.add('hidden');
+                // Mostra gameContainer ao retomar
+                if (gameContainer) {
+                    gameContainer.classList.remove('hidden');
+                }
                 // Limpar ranking da tela de pausa
                 if (pauseRankingDisplay) {
                     pauseRankingDisplay.innerHTML = '';
