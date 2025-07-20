@@ -577,6 +577,7 @@
 
             <div class="start-screen" id="startScreen">
                 <h1>TIRO NO METRÔ</h1>
+                <p>Clique para iniciar e entrar em tela cheia!</p> <!-- Instrução para tela cheia -->
                 <button class="start-button" id="startButton">INICIAR JOGO</button>
             </div>
 
@@ -791,6 +792,23 @@
         const bossMusic = new Audio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'); // MÚSICA DE FUNDO AGORA É MÚSICA DO BOSS
         bossMusic.loop = true;
         bossMusic.volume = 0.6;
+
+        /**
+         * Solicita o modo tela cheia para o documento.
+         */
+        function toggleFullScreen() {
+            const element = document.documentElement; // Alvo: o documento HTML inteiro
+
+            if (element.requestFullscreen) {
+                element.requestFullscreen();
+            } else if (element.mozRequestFullScreen) { /* Firefox */
+                element.mozRequestFullScreen();
+            } else if (element.webkitRequestFullscreen) { /* Chrome, Safari e Opera */
+                element.webkitRequestFullscreen();
+            } else if (element.msRequestFullscreen) { /* IE/Edge */
+                element.msRequestFullscreen();
+            }
+        }
 
         /**
          * Atualiza as estatísticas do jogador com base no nível atual.
@@ -2463,9 +2481,15 @@
         // Botão Reiniciar
         restartButton.addEventListener('click', initializeGame);
         // Botão Iniciar para a tela inicial
-        startButton.addEventListener('click', initializeGame); 
+        startButton.addEventListener('click', () => {
+            initializeGame();
+            toggleFullScreen(); // Solicita tela cheia ao iniciar
+        }); 
         // Botão Continuar para a tela de Stage Clear
-        continueButton.addEventListener('click', startNextStage); 
+        continueButton.addEventListener('click', () => {
+            startNextStage();
+            toggleFullScreen(); // Solicita tela cheia ao continuar
+        }); 
 
         // Exibe a tela inicial ao carregar
         window.onload = () => {
