@@ -732,12 +732,10 @@
 
                 <!-- Bottom Info Container for Boss Progress -->
                 <div class="bottom-info-container">
-                    <div class="boss-progress-container">
-                        <i class="fas fa-dungeon"></i>
-                        <span>Boss: <span id="bossProgressText">0 / 50</span></span>
-                        <div class="boss-progress-bar">
-                            <div class="boss-progress-fill" id="bossProgressFill"></div>
-                        </div>
+                    <i class="fas fa-dungeon"></i>
+                    <span>Boss: <span id="bossProgressText">0 / 50</span></span>
+                    <div class="boss-progress-bar">
+                        <div class="boss-progress-fill" id="bossProgressFill"></div>
                     </div>
                 </div>
             </div>
@@ -1172,12 +1170,12 @@
             }
             obstacles = [];
 
-            if (boss && boss.parentNode) {
+            if (boss && boss.parentNode) { // Adicionado verificação obj.parentNode
                 boss.parentNode.removeChild(boss);
                 boss = null;
             }
             const existingBossHealthBarWrapper = document.getElementById('bossHealthBarWrapper');
-            if (existingBossHealthBarWrapper && existingBossHealthBarWrapper.parentNode) {
+            if (existingBossHealthBarWrapper && existingBossHealthBarWrapper.parentNode) { // Adicionado verificação obj.parentNode
                 existingBossHealthBarWrapper.parentNode.removeChild(existingBossHealthBarWrapper);
             }
 
@@ -1377,27 +1375,13 @@
             object.style.backgroundPosition = 'center';
             object.style.filter = `hue-rotate(${selectedEnemyType.hueRotate}deg)`;
 
-            const enemyHealthBarWrapper = document.createElement('div');
-            enemyHealthBarWrapper.classList.add('enemy-health-bar-wrapper');
-            const enemyHealthBar = document.createElement('div');
-            enemyHealthBar.classList.add('enemy-health-bar');
-            const enemyHealthFill = document.createElement('div');
-            enemyHealthFill.classList.add('enemy-health-fill');
-            enemyHealthBar.appendChild(enemyHealthFill);
-            enemyHealthBarWrapper.appendChild(enemyHealthBar);
-            object.appendChild(enemyHealthBarWrapper);
-
-            object.dataset.hasShot = 'false';
-            object.dataset.shootTimer = currentTime + (isHeavyEnemy ? selectedEnemyType.shootInterval : 1000);
-            object.dataset.shootType = isHeavyEnemy ? 'straight' : (Math.random() < 0.5 ? 'straight' : 'diagonal');
-            object.dataset.isHeavy = isHeavyEnemy;
-
-            gameContainer.appendChild(object);
-            fallingObjects.push(object);
-
-            if (isHeavyEnemy) {
-                isHeavyEnemyOnScreen = true;
-                console.log("Heavy enemy spawned. isHeavyEnemyOnScreen = true");
+            const enemyHealthBarWrapper = object.querySelector('.enemy-health-bar-wrapper');
+            if (enemyHealthBarWrapper) {
+                if (object.dataset.isHeavy === 'true') {
+                    enemyHealthBarWrapper.style.top = `${-20}px`; 
+                } else {
+                    enemyHealthBarWrapper.style.top = `${-15}px`;
+                }
             }
         }
 
@@ -2617,7 +2601,7 @@
                     if (!segment) return; // Adicionado: Verificação de nulidade
 
                     const gameContainerHeight = gameContainer.offsetHeight; // Captura a altura dentro do loop para robustez
-                    const scrollSpeed = backgroundScrollSpeed; 
+                    const scrollSpeed = backgroundMusic.paused ? 0 : backgroundScrollSpeed; // PAUSA O SCROLL SE A MÚSICA ESTIVER PAUSADA
 
                     let currentTop = parseFloat(segment.style.top);
                     if (isNaN(currentTop)) { currentTop = 0; segment.style.top = `${currentTop}px`; }
@@ -2695,7 +2679,7 @@
                 animationFrameId = requestAnimationFrame(gameLoop);
             } catch (error) {
                 console.error("Erro crítico no gameLoop:", error);
-                showGameOverScreen(); 
+                if (gameRunning) showGameOverScreen(); 
             }
         }
 
