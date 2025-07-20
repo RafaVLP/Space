@@ -374,6 +374,33 @@
             text-shadow: 0 0 8px rgba(246, 224, 94, 0.8);
             margin-bottom: 20px; /* Espaço para o botão */
         }
+        /* Estilo para a lista de ranking na tela de pausa */
+        #pauseRankingDisplay {
+            list-style: none;
+            padding: 0;
+            margin: 1rem 0 2rem 0;
+            width: 80%;
+            max-width: 300px;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 0.5rem;
+            border: 2px solid #4a5568;
+            color: #cbd5e0;
+            font-size: 0.8rem;
+            text-align: left; /* Alinha o texto à esquerda na lista */
+            max-height: 200px; /* Limita a altura para caber na tela de pausa */
+            overflow-y: auto; /* Adiciona rolagem se a lista for muito longa */
+        }
+
+        #pauseRankingDisplay li {
+            padding: 0.4rem 0.8rem;
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(74, 85, 104, 0.3);
+        }
+        #pauseRankingDisplay li:last-child {
+            border-bottom: none;
+        }
+
 
         /* Estilos para a tela de Ranking */
         .ranking-screen h1 {
@@ -625,7 +652,6 @@
 <body>
     <div class="game-master-wrapper">
         <div class="main-game-layout">
-            <!-- Left Sidebar for Shield Bar -->
             <div class="sidebar-container left-sidebar">
                 <i class="fas fa-shield-alt sidebar-icon"></i>
                 <div class="sidebar-bar-wrapper">
@@ -637,7 +663,6 @@
             </div>
 
             <div class="game-area-wrapper">
-                <!-- Top Info Container for Player Stats -->
                 <div class="top-info-container">
                     <div class="info-item">
                         <i class="fas fa-fist-raised"></i>
@@ -661,15 +686,13 @@
                     </div>
 
                     <div class="start-screen" id="startScreen">
-                        <p id="pressStartText">PRESS START</p> <!-- Texto "PRESS START" piscando -->
-                    </div>
+                        <p id="pressStartText">PRESS START</p> </div>
 
                     <div class="game-over-screen hidden" id="gameOverScreen">
                         <h1>FIM DE JOGO!</h1>
                         <p>Sua Pontuação: <span id="finalScore">0</span></p>
                         <button class="restart-button" id="restartButton">JOGAR NOVAMENTE</button>
-                        <button class="screen-button" id="showRankingButton">VER RANKING</button> <!-- Botão adicionado -->
-                    </div>
+                        <button class="screen-button" id="showRankingButton">VER RANKING</button> </div>
 
                     <div class="stage-clear-screen hidden" id="stageClearScreen">
                         <h1>ESTÁGIO CONCLUÍDO!</h1>
@@ -678,15 +701,14 @@
                     </div>
 
                     <div class="pause-screen hidden" id="pauseScreen">
-                        <p id="pauseContinueText">CONTINUAR</p> <!-- Texto "CONTINUAR" -->
-                    </div>
+                        <p id="pauseContinueText">PAUSADO</p> <div id="pauseRankingDisplay">
+                            </div>
+                        <p>Toque em qualquer lugar para continuar.</p> </div>
 
-                    <!-- Nova tela de ranking -->
                     <div class="ranking-screen hidden" id="rankingScreen">
                         <h1>TOP 10 PONTUAÇÕES</h1>
                         <ul id="highScoresList">
-                            <!-- Itens do ranking serão inseridos aqui pelo JS -->
-                        </ul>
+                            </ul>
                         <div class="ranking-input-form hidden" id="nameInputForm">
                             <p>Parabéns! Você entrou no Top 10!</p>
                             <input type="text" id="playerNameInput" placeholder="Seu nome" maxlength="10">
@@ -695,11 +717,9 @@
                         <button class="ranking-play-again-button" id="rankingPlayAgainButton">JOGAR NOVAMENTE</button>
                     </div>
 
-                    <!-- Botão de Pausa movido para dentro de game-container -->
                     <button class="pause-button" id="pauseButton">PAUSAR</button>
                 </div>
 
-                <!-- Bottom Info Container for Boss Progress -->
                 <div class="bottom-info-container">
                     <div class="boss-progress-container">
                         <i class="fas fa-dungeon"></i>
@@ -711,14 +731,12 @@
                 </div>
             </div>
 
-            <!-- Right Sidebar for Health Bar -->
             <div class="sidebar-container right-sidebar">
                 <i class="fas fa-heart sidebar-icon"></i>
                 <div class="sidebar-bar-wrapper">
                     <div class="vertical-bar" id="playerHealthBar">
                         <div class="vertical-fill" id="healthFill"></div>
-                        <div class="vertical-overshield-fill" id="overshieldFill"></div> <!-- NOVO: Barra de sobrevida -->
-                        <span class="vertical-text" id="playerHealthText"></span>
+                        <div class="vertical-overshield-fill" id="overshieldFill"></div> <span class="vertical-text" id="playerHealthText"></span>
                     </div>
                 </div>
             </div>
@@ -787,7 +805,8 @@
             overshieldFill, playerHealthText, shieldHealthBar, shieldHealthFill, 
             shieldHealthText, bossProgressText, bossProgressFill, pressStartText, 
             pauseContinueText, rankingScreen, highScoresList, nameInputForm, 
-            playerNameInput, submitScoreButton, rankingPlayAgainButton, showRankingButton;
+            playerNameInput, submitScoreButton, rankingPlayAgainButton, showRankingButton,
+            pauseRankingDisplay; // Adicionado pauseRankingDisplay aqui
 
 
         // Segmentos de fundo
@@ -1111,12 +1130,12 @@
             obstacles.forEach(o => { if(o && o.parentNode) o.parentNode.removeChild(o); }); 
             obstacles = [];
 
-            if (boss && boss.parentNode) {
+            if (boss && boss.parentNode) { // Adicionado verificação obj.parentNode
                 boss.parentNode.removeChild(boss);
                 boss = null;
             }
             const existingBossHealthBarWrapper = document.getElementById('bossHealthBarWrapper');
-            if (existingBossHealthBarWrapper && existingBossHealthBarWrapper.parentNode) {
+            if (existingBossHealthBarWrapper && existingBossHealthBarWrapper.parentNode) { // Adicionado verificação obj.parentNode
                 existingBossHealthBarWrapper.parentNode.removeChild(existingBossHealthBarWrapper);
             }
             bossBullets.forEach(b => { if(b && b.parentNode) b.parentNode.removeChild(b); });
@@ -2188,8 +2207,9 @@
 
             const bossHealthBarWrapper = document.createElement('div');
             bossHealthBarWrapper.id = 'bossHealthBarWrapper'; 
-            bossHealthBarWrapper.classList.add('boss-health-bar-wrapper');
-            gameContainer.appendChild(bossHealthBarWrapper);
+            gameContainer.appendChild(bossHealthBarWrapper); // Adicionar o wrapper antes de tentar adicionar coisas a ele
+
+            bossHealthBarWrapper.classList.add('boss-health-bar-wrapper'); // Adiciona classe depois que o elemento existe no DOM
 
             const healthBar = document.createElement('div');
             healthBar.classList.add('boss-health-bar');
@@ -2545,18 +2565,18 @@
          */
         function updateBackgroundSegments() {
             try {
-                const gameContainerHeight = gameContainer.offsetHeight;
-                const scrollSpeed = backgroundScrollSpeed; 
-
                 backgroundSegments.forEach(segment => {
                     if (!segment) return; // Adicionado: Verificação de nulidade
+
+                    const gameContainerHeight = gameContainer.offsetHeight; // Captura a altura dentro do loop para robustez
+                    const scrollSpeed = backgroundScrollSpeed; 
 
                     let currentTop = parseFloat(segment.style.top);
                     if (isNaN(currentTop)) { currentTop = 0; segment.style.top = `${currentTop}px`; }
                     currentTop += scrollSpeed;
                     segment.style.top = `${currentTop}px`;
 
-                    if (currentTop >= gameContainer.offsetHeight) {
+                    if (currentTop >= gameContainerHeight) { // Usa gameContainerHeight aqui
                         segment.style.top = `${currentTop - (gameContainerHeight * 2) - 1}px`; 
                         segment.classList.toggle('rotated-180'); 
                     }
@@ -2680,7 +2700,7 @@
                 playerNameInput.focus(); // Foca no input
                 displayHighScores(highScores); // Exibe o ranking atual
             } else {
-                gameOverScreen.classList.remove('hidden'); // Esconde Game Over
+                gameOverScreen.classList.remove('hidden'); // Mostra Game Over
                 // Se não for Top 10, mas queremos mostrar o ranking, podemos fazer isso aqui.
                 // Por enquanto, apenas esconde o ranking se não for Top 10.
                 rankingScreen.classList.add('hidden'); 
@@ -2693,13 +2713,17 @@
         /**
          * Pausa o jogo.
          */
-        function pauseGame() {
+        async function pauseGame() { // Adicionado async
             if (gameRunning && !gamePaused) {
                 gamePaused = true;
                 cancelAnimationFrame(animationFrameId);
                 pauseScreen.classList.remove('hidden');
                 backgroundMusic.pause();
                 bossMusic.pause();
+
+                // Exibir ranking na tela de pausa
+                const highScores = await getHighScores();
+                displayPauseRanking(highScores);
             }
         }
 
@@ -2710,6 +2734,10 @@
             if (gameRunning && gamePaused) {
                 gamePaused = false;
                 pauseScreen.classList.add('hidden');
+                // Limpar ranking da tela de pausa
+                if (pauseRankingDisplay) {
+                    pauseRankingDisplay.innerHTML = '';
+                }
                 startGameLoop();
                 if (isBossFightActive) {
                     bossMusic.play().catch(e => console.log("Erro ao tocar música do boss:", e));
@@ -2818,7 +2846,7 @@
         }
 
         /**
-         * Exibe as pontuações na lista de ranking.
+         * Exibe as pontuações na lista de ranking principal (tela de Game Over/Ranking).
          * @param {Array<Object>} scores - Array de objetos de pontuação.
          */
         function displayHighScores(scores) {
@@ -2833,6 +2861,34 @@
                 const li = document.createElement('li');
                 li.innerHTML = `<span>${index + 1}. ${scoreData.name || 'Anônimo'}</span><span>${scoreData.score}</span>`;
                 highScoresList.appendChild(li);
+            });
+        }
+
+        /**
+         * Exibe as pontuações na lista de ranking da tela de pausa.
+         * @param {Array<Object>} scores - Array de objetos de pontuação.
+         */
+        function displayPauseRanking(scores) {
+            if (!pauseRankingDisplay) return; // Garante que o elemento existe
+            pauseRankingDisplay.innerHTML = ''; // Limpa a lista anterior
+            const title = document.createElement('p');
+            title.textContent = "TOP PONTUAÇÕES";
+            title.style.cssText = "font-size: 0.9rem; color: #cbd5e0; margin-bottom: 0.5rem; text-shadow: none;";
+            pauseRankingDisplay.appendChild(title);
+
+            if (scores.length === 0) {
+                const li = document.createElement('li');
+                li.textContent = "Nenhuma pontuação.";
+                li.style.cssText = "font-size: 0.7rem; justify-content: center;";
+                pauseRankingDisplay.appendChild(li);
+                return;
+            }
+            scores.forEach((scoreData, index) => {
+                if (index >= 5) return; // Limita a 5 itens para não sobrecarregar a tela de pausa
+                const li = document.createElement('li');
+                li.innerHTML = `<span>${index + 1}. ${scoreData.name || 'Anônimo'}</span><span>${scoreData.score}</span>`;
+                li.style.cssText = "font-size: 0.7rem;"; // Tamanho de fonte menor para a pausa
+                pauseRankingDisplay.appendChild(li);
             });
         }
 
@@ -2878,7 +2934,7 @@
             submitScoreButton = document.getElementById('submitScoreButton');
             rankingPlayAgainButton = document.getElementById('rankingPlayAgainButton');
             showRankingButton = document.getElementById('showRankingButton'); 
-
+            pauseRankingDisplay = document.getElementById('pauseRankingDisplay'); // Obtenção da referência
 
             // --- Eventos de Controle ---
 
