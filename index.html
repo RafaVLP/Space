@@ -1603,10 +1603,10 @@
                 }
 
                 if (!overlap) {
-                    obstacle.style.left = `${tempLeft}px`;
-                    obstacle.style.top = `${tempTop}px`;
-                    obstacle.style.width = `${tempWidth}px`;
-                    obstacle.style.height = `${tempHeight}px`;
+                    object.style.left = `${tempLeft}px`;
+                    object.style.top = `${tempTop}px`;
+                    object.style.width = `${tempWidth}px`;
+                    object.style.height = `${tempHeight}px`;
                     spawned = true;
                     break;
                 }
@@ -1834,7 +1834,7 @@
                                     isHeavyEnemyOnScreen = false; 
                                     console.log("Heavy enemy defeated. isHeavyEnemyOnScreen = false");
                                     score += 10; 
-                                    const gameRect = gameContainer.getBoundingClientRect();
+                                    const gameRect = gameContainer.getBoundingClientRect(); 
                                     const positivePowerUps = powerUpTypes.filter(type => type.type !== 'damage_down');
                                     const forcedPowerUp = positivePowerUps[Math.floor(Math.random() * positivePowerUps.length)];
                                     createCollectible(objectRect.left - gameRect.left, objectRect.top - gameRect.top, performance.now(), forcedPowerUp.type);
@@ -2641,7 +2641,7 @@
                     if (!segment) return; // Adicionado: Verificação de nulidade
 
                     const gameContainerHeight = gameContainer.offsetHeight; // Captura a altura dentro do loop para robustez
-                    const scrollSpeed = backgroundMusic.paused ? 0 : backgroundScrollSpeed; // PAUSA O SCROLL SE A MÚSICA ESTIVER PAUSADA
+                    const scrollSpeed = gamePaused ? 0 : backgroundScrollSpeed; // PAUSA O SCROLL SE O JOGO ESTIVER PAUSADO
 
                     let currentTop = parseFloat(segment.style.top);
                     if (isNaN(currentTop)) { currentTop = 0; segment.style.top = `${currentTop}px`; }
