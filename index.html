@@ -946,7 +946,7 @@
             { scoreThreshold: 80, hits: 5, hueRotate: 240, sprite: 'https://i.ibb.co/TMFR5810/file-00000000646c61f8b1feda6cccc966af.png' }  
         ];
 
-        // Background colors for advanced levels (more colorful)
+        // Cores de fundo do cenário para indicar níveis avançados (mais coloridas)
         const backgroundPresets = [
             'linear-gradient(to bottom, #4a90e2 0%, #2e6cb8 100%)', 
             'linear-gradient(to bottom, #7ed321 0%, #5cb82e 100%)', 
@@ -960,12 +960,12 @@
         let currentStageHueRotation = 0; 
         const stageHueRotationIncrement = 60; 
 
-        // Touch control variables
+        // Variáveis para controle de toque
         let touchStartX = 0;
         let touchStartY = 0; 
         let playerMoving = false;
 
-        // Audio element references
+        // Referência ao elemento de áudio
         const backgroundMusic = new Audio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3'); 
         backgroundMusic.loop = true; 
         backgroundMusic.volume = 0.5; 
@@ -1056,6 +1056,15 @@
             rankingScreen.classList.add('hidden'); // Esconde a tela de ranking
             nameInputForm.classList.add('hidden'); // Esconde o formulário de nome
 
+            // Recriar e anexar o player
+            if (!player || !player.parentNode || player.parentNode !== gameContainer) {
+                if (player && player.parentNode) player.parentNode.removeChild(player);
+                player = document.createElement('div');
+                player.id = 'player';
+                player.classList.add('player');
+                gameContainer.appendChild(player);
+            }
+
             playerX = gameContainer.offsetWidth / 2 - player.offsetWidth / 2;
             playerY = gameContainer.offsetHeight - player.offsetHeight - 20; 
             player.style.left = `${playerX}px`;
@@ -1120,6 +1129,20 @@
             lastObstacleSpawnTime = performance.now(); 
             startGameLoop();
 
+            // Recriar e anexar o player
+            if (!player || !player.parentNode || player.parentNode !== gameContainer) {
+                if (player && player.parentNode) player.parentNode.removeChild(player);
+                player = document.createElement('div');
+                player.id = 'player';
+                player.classList.add('player');
+                gameContainer.appendChild(player);
+            }
+            // Manter a posição do player do estágio anterior ou resetar para o padrão
+            playerX = gameContainer.offsetWidth / 2 - player.offsetWidth / 2;
+            playerY = gameContainer.offsetHeight - player.offsetHeight - 20;
+            updatePlayerPosition();
+
+
             backgroundMusic.play().catch(e => console.log("Error playing music:", e)); 
             bossMusic.pause(); 
             bossMusic.currentTime = 0;
@@ -1130,41 +1153,41 @@
          */
         function clearGameElements() {
             // Remove elementos do DOM e limpa arrays
-            for (let i = fallingObjects.length - 1; i >= 0; i--) {
+            for (let i = fallingObjects.length - 1; i >= 0; i--) { // Iterar de trás para frente
                 const obj = fallingObjects[i];
-                if (obj && obj.parentNode) {
+                if (obj && obj.parentNode) { // Adicionado: Verificação de nulidade e parentNode
                     obj.parentNode.removeChild(obj);
                 }
             }
             fallingObjects = [];
 
-            for (let i = bullets.length - 1; i >= 0; i--) {
+            for (let i = bullets.length - 1; i >= 0; i--) { // Iterar de trás para frente
                 const bullet = bullets[i];
-                if (bullet && bullet.parentNode) {
+                if (bullet && bullet.parentNode) { // Adicionado: Verificação de nulidade e parentNode
                     bullet.parentNode.removeChild(bullet);
                 }
             }
             bullets = [];
 
-            for (let i = collectibles.length - 1; i >= 0; i--) {
+            for (let i = collectibles.length - 1; i >= 0; i--) { // Iterar de trás para frente
                 const col = collectibles[i];
-                if (col && col.parentNode) {
+                if (col && col.parentNode) { // Adicionado: Verificação de nulidade e parentNode
                     col.parentNode.removeChild(col);
                 }
             }
             collectibles = [];
 
-            for (let i = enemyBullets.length - 1; i >= 0; i--) {
+            for (let i = enemyBullets.length - 1; i >= 0; i--) { // Iterar de trás para frente
                 const b = enemyBullets[i];
-                if (b && b.parentNode) {
+                if (b && b.parentNode) { // Adicionado: Verificação de nulidade e parentNode
                     b.parentNode.removeChild(b);
                 }
             }
             enemyBullets = [];
 
-            for (let i = obstacles.length - 1; i >= 0; i--) {
+            for (let i = obstacles.length - 1; i >= 0; i--) { // Iterar de trás para frente
                 const o = obstacles[i];
-                if (o && o.parentNode) {
+                if (o && o.parentNode) { // Adicionado: Verificação de nulidade e parentNode
                     o.parentNode.removeChild(o);
                 }
             }
@@ -1179,9 +1202,9 @@
                 existingBossHealthBarWrapper.parentNode.removeChild(existingBossHealthBarWrapper);
             }
 
-            for (let i = bossBullets.length - 1; i >= 0; i--) {
+            for (let i = bossBullets.length - 1; i >= 0; i--) { // Iterar de trás para frente
                 const b = bossBullets[i];
-                if (b && b.parentNode) {
+                if (b && b.parentNode) { // Adicionado: Verificação de nulidade e parentNode
                     b.parentNode.removeChild(b);
                 }
             }
@@ -1375,13 +1398,27 @@
             object.style.backgroundPosition = 'center';
             object.style.filter = `hue-rotate(${selectedEnemyType.hueRotate}deg)`;
 
-            const enemyHealthBarWrapper = object.querySelector('.enemy-health-bar-wrapper');
-            if (enemyHealthBarWrapper) {
-                if (object.dataset.isHeavy === 'true') {
-                    enemyHealthBarWrapper.style.top = `${-20}px`; 
-                } else {
-                    enemyHealthBarWrapper.style.top = `${-15}px`;
-                }
+            const enemyHealthBarWrapper = document.createElement('div');
+            enemyHealthBarWrapper.classList.add('enemy-health-bar-wrapper');
+            const enemyHealthBar = document.createElement('div');
+            enemyHealthBar.classList.add('enemy-health-bar');
+            const enemyHealthFill = document.createElement('div');
+            enemyHealthFill.classList.add('enemy-health-fill');
+            enemyHealthBar.appendChild(enemyHealthFill);
+            enemyHealthBarWrapper.appendChild(enemyHealthBar);
+            object.appendChild(enemyHealthBarWrapper);
+
+            object.dataset.hasShot = 'false';
+            object.dataset.shootTimer = currentTime + (isHeavyEnemy ? selectedEnemyType.shootInterval : 1000);
+            object.dataset.shootType = isHeavyEnemy ? 'straight' : (Math.random() < 0.5 ? 'straight' : 'diagonal');
+            object.dataset.isHeavy = isHeavyEnemy;
+
+            gameContainer.appendChild(object);
+            fallingObjects.push(object);
+
+            if (isHeavyEnemy) {
+                isHeavyEnemyOnScreen = true;
+                console.log("Heavy enemy spawned. isHeavyEnemyOnScreen = true");
             }
         }
 
@@ -2220,6 +2257,8 @@
          * Cria o elemento do boss.
          */
         function createBoss() {
+            if (!gameRunning) return; // Adicionado: Verificação para evitar spawn se o jogo não estiver rodando
+
             boss = document.createElement('div');
             boss.classList.add('boss');
             boss.style.left = `${(gameContainer.offsetWidth / 2) - (100 / 2)}px`; 
@@ -2254,6 +2293,7 @@
          * Atualiza a barra de vida do boss.
          */
         function updateBossHealthBar() {
+            if (!gameRunning) return; // Adicionado: Verificação para evitar execução se o jogo não estiver rodando
             if (boss) {
                 const bossHealthBarWrapper = document.getElementById('bossHealthBarWrapper');
                 if (bossHealthBarWrapper) {
