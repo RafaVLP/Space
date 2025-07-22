@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tiro no Metrô</title>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start 2P&family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -337,7 +337,7 @@
             100% { box-shadow: 0 0 5px rgba(255, 255, 255, 0.5), 0 0 10px var(--neon-color, #00f), 0 0 15px var(--neon-color, #00f); }
         }
 
-        .game-over-screen, .start-screen, .stage-clear-screen, .pause-screen, .ranking-screen { /* Adicionado .ranking-screen */
+        .game-over-screen, .start-screen, .stage-clear-screen, .pause-screen, .ranking-screen, .settings-screen { /* Adicionado .settings-screen */
             position: absolute;
             top: 0;
             left: 0;
@@ -382,7 +382,7 @@
             100% { opacity: 0; } /* CORRIGIDO: Era 'opacity = 0;' */
         }
 
-        .pause-screen, .ranking-screen { /* Adicionado .ranking-screen */
+        .pause-screen, .ranking-screen, .settings-screen { /* Adicionado .settings-screen */
             background-image: url('https://i.ibb.co/JjxJVM6D/1753025379623.png'); /* MESMA IMAGEM DA TELA INICIAL */
             background-size: cover;
             background-position: center;
@@ -471,19 +471,19 @@
         }
 
 
-        .game-over-screen h1, .start-screen h1, .stage-clear-screen h1, .pause-screen h1 {
+        .game-over-screen h1, .start-screen h1, .stage-clear-screen h1, .pause-screen h1, .settings-screen h1 {
             font-size: 1.8rem;
             margin-bottom: 1rem;
             color: #f6e05e;
             text-shadow: 0 0 10px rgba(246, 224, 94, 0.8);
         }
 
-        .game-over-screen p, .stage-clear-screen p, .pause-screen p {
+        .game-over-screen p, .stage-clear-screen p, .pause-screen p, .settings-screen p {
             font-size: 1.2rem;
             margin-bottom: 0.5rem;
         }
 
-        .restart-button, .start-button, .continue-button, .pause-button-style, .resume-button, .submit-score-button, .ranking-play-again-button, .back-button { /* Adicionado submit-score-button, ranking-play-again-button, back-button */
+        .restart-button, .start-button, .continue-button, .pause-button-style, .resume-button, .submit-score-button, .ranking-play-again-button, .back-button, .settings-button { /* Adicionado settings-button */
             background-color: #48bb78;
             color: white;
             padding: 1rem 2rem;
@@ -499,19 +499,19 @@
             letter-spacing: 1px;
         }
 
-        .restart-button:hover, .start-button:hover, .continue-button:hover, .pause-button-style:hover, .resume-button:hover, .submit-score-button:hover, .ranking-play-again-button:hover, .back-button:hover {
+        .restart-button:hover, .start-button:hover, .continue-button:hover, .pause-button-style:hover, .resume-button:hover, .submit-score-button:hover, .ranking-play-again-button:hover, .back-button:hover, .settings-button:hover {
             background-color: #38a169;
             transform: translateY(-3px);
             box-shadow: 0 8px 16px rgba(72, 187, 120, 0.6);
         }
 
-        .restart-button:active, .start-button:active, .continue-button:active, .pause-button-style:active, .resume-button:active, .submit-score-button:active, .ranking-play-again-button:active, .back-button:active {
+        .restart-button:active, .start-button:active, .continue-button:active, .pause-button-style:active, .resume-button:active, .submit-score-button:active, .ranking-play-again-button:active, .back-button:active, .settings-button:active {
             transform: translateY(0);
             box-shadow: 0 3px 6px rgba(72, 187, 120, 0.4);
         }
 
         .hidden {
-            display: none;
+            display: none !important; /* Adicionado !important para garantir que a tela de carregamento seja escondida */
         }
 
         .boss {
@@ -673,7 +673,7 @@
             transition: width 0.2s ease-out;
         }
 
-        /* Estilos para o sistema de partículas */
+        /* Estilos para o sistema de partículas de explosão */
         .particle-container {
             position: absolute;
             top: 0;
@@ -687,11 +687,12 @@
 
         .particle {
             position: absolute;
-            background-color: #f6e05e; /* Cor padrão da partícula (amarelo) */
+            background-color: var(--particle-color); /* Usar variável CSS para a cor da partícula */
             border-radius: 50%;
             opacity: 1;
             transform: scale(1);
             animation: explode 0.8s forwards; /* Duração e preenchimento para manter o estado final */
+            box-shadow: 0 0 5px 2px rgba(255, 255, 255, 0.5); /* Brilho discreto (branco semi-transparente) */
         }
 
         @keyframes explode {
@@ -704,12 +705,126 @@
                 opacity: 0;
             }
         }
+
+        /* NOVO: Estilos para as partículas de acerto (hit) */
+        .hit-particle {
+            position: absolute;
+            background-color: var(--particle-color); /* Usa a mesma variável de cor */
+            border-radius: 50%;
+            opacity: 1;
+            /* Z-index ligeiramente maior para garantir visibilidade */
+            z-index: 16; 
+            animation: hit-spark 0.3s forwards; /* Animação mais rápida */
+            box-shadow: 0 0 3px 1px rgba(255, 255, 255, 0.7); /* Brilho mais forte para destaque */
+        }
+
+        @keyframes hit-spark {
+            0% {
+                transform: translate(0, 0) scale(0.8); /* Começa com tamanho maior para ser visível */
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--particle-dx), var(--particle-dy)) scale(0); /* Desaparece */
+                opacity: 0;
+            }
+        }
+
+        /* Tela de Carregamento */
+        #loadingScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #1a202c; /* Fundo escuro */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #f6e05e;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 1.2rem;
+            text-align: center; /* Centraliza o texto dentro do flex container */
+            z-index: 50; /* Acima de tudo */
+        }
+
+        #loadingProgressBar {
+            width: 80%;
+            max-width: 300px;
+            height: 20px;
+            background-color: #4a5568;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 20px;
+            border: 2px solid #a0aec0;
+        }
+
+        #loadingProgressFill {
+            width: 0%;
+            height: 100%;
+            background-color: #48bb78;
+            border-radius: 8px;
+            transition: width 0.1s linear;
+        }
+
+        /* Estilos para os checkboxes na tela de configurações */
+        .settings-option {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 80%;
+            max-width: 250px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            color: #cbd5e0;
+        }
+
+        .settings-option input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            /* Estilos básicos para o checkbox para que seja visível */
+            appearance: none; /* Remove o estilo padrão do navegador */
+            background-color: #4a5568;
+            border: 2px solid #cbd5e0;
+            border-radius: 4px;
+            position: relative;
+            outline: none;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+
+        .settings-option input[type="checkbox"]:checked {
+            background-color: #48bb78; /* Cor quando marcado */
+            border-color: #48bb78;
+        }
+
+        .settings-option input[type="checkbox"]::after {
+            content: '\2713'; /* Símbolo de checkmark */
+            font-size: 16px;
+            color: #1a202c;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .settings-option input[type="checkbox"]:checked::after {
+            transform: translate(-50%, -50%) scale(1);
+        }
     </style>
 </head>
 <body>
     <div class="game-master-wrapper">
+        <!-- Tela de Carregamento -->
+        <div id="loadingScreen">
+            <p>Carregando Recursos...</p>
+            <div id="loadingProgressBar">
+                <div id="loadingProgressFill"></div>
+            </div>
+        </div>
+
         <div class="main-game-layout">
-            <!-- Left Sidebar for Shield Bar -->
             <div class="sidebar-container left-sidebar">
                 <i class="fas fa-shield-alt sidebar-icon"></i>
                 <div class="sidebar-bar-wrapper">
@@ -721,7 +836,6 @@
             </div>
 
             <div class="game-area-wrapper">
-                <!-- Top Info Container for Player Stats -->
                 <div class="top-info-container">
                     <div class="info-item">
                         <i class="fas fa-fist-raised"></i>
@@ -744,19 +858,18 @@
                     <div class="player" id="player">
                     </div>
 
-                    <!-- Particle Container -->
                     <div class="particle-container" id="particleContainer"></div>
 
                     <div class="start-screen" id="startScreen">
-                        <p id="pressStartText">PRESS START</p> <!-- Texto "PRESS START" piscando -->
+                        <p id="pressStartText">PRESS START</p>
+                        <button class="settings-button" id="settingsButton">CONFIGURAÇÕES</button>
                     </div>
 
                     <div class="game-over-screen hidden" id="gameOverScreen">
                         <h1>FIM DE JOGO!</h1>
                         <p>Sua Pontuação: <span id="finalScore">0</span></p>
                         <button class="restart-button" id="restartButton">JOGAR NOVAMENTE</button>
-                        <button class="screen-button" id="showRankingButton">VER RANKING</button> <!-- Botão adicionado -->
-                    </div>
+                        <button class="screen-button" id="showRankingButton">VER RANKING</button> </div>
 
                     <div class="stage-clear-screen hidden" id="stageClearScreen">
                         <h1>ESTÁGIO CONCLUÍDO!</h1>
@@ -772,48 +885,59 @@
                         </div>
                         <button class="resume-button" id="resumeButton">RETOMAR JOGO</button>
                         <button class="screen-button" id="pauseShowRankingButton">VER RANKING</button>
+                        <button class="settings-button" id="pauseSettingsButton">CONFIGURAÇÕES</button> <!-- Botão de configurações na pausa -->
                         <button class="restart-button" id="pauseRestartButton">REINICIAR JOGO</button>
                     </div>
 
-                    <!-- Nova tela de ranking -->
                     <div class="ranking-screen hidden" id="rankingScreen">
                         <h1>TOP 10 PONTUAÇÕES</h1>
                         <ul id="highScoresList">
-                            <!-- Itens do ranking serão inseridos aqui pelo JS -->
-                        </ul>
+                            </ul>
                         <div class="ranking-input-form hidden" id="nameInputForm">
                             <p>Parabéns! Você entrou no Top 10!</p>
                             <input type="text" id="playerNameInput" placeholder="Seu nome" maxlength="10">
                             <button id="submitScoreButton">Enviar Pontuação</button>
                         </div>
                         <button class="ranking-play-again-button" id="rankingPlayAgainButton">JOGAR NOVAMENTE</button>
-                        <button class="back-button" id="backToStartScreenButton">VOLTAR AO INÍCIO</button> <!-- Botão adicionado -->
+                        <button class="back-button" id="backToStartScreenButton">VOLTAR AO INÍCIO</button> </div>
+                    
+                    <!-- Nova Tela de Configurações -->
+                    <div class="settings-screen hidden" id="settingsScreen">
+                        <h1>CONFIGURAÇÕES DE SOM</h1>
+                        <div class="settings-option">
+                            <span>Som do Tiro:</span>
+                            <input type="checkbox" id="toggleShotSound">
+                        </div>
+                        <div class="settings-option">
+                            <span>Música do Ambiente:</span>
+                            <input type="checkbox" id="toggleAmbientMusic">
+                        </div>
+                        <div class="settings-option">
+                            <span>Som de Explosão:</span>
+                            <input type="checkbox" id="toggleExplosionSound">
+                        </div>
+                        <button class="back-button" id="backToPreviousScreenFromSettings">VOLTAR</button> <!-- ID alterado -->
                     </div>
 
-                    <!-- Botão de Pausa movido para dentro de game-container -->
                     <button class="pause-button" id="pauseButton">PAUSAR</button>
                 </div>
 
-                <!-- Bottom Info Container for Boss Progress -->
                 <div class="bottom-info-container">
                     <div class="boss-progress-container">
                         <i class="fas fa-dungeon"></i>
                         <div class="boss-progress-bar">
                             <div class="boss-progress-fill" id="bossProgressFill"></div>
                         </div>
-                        <span id="bossProgressText">0 / 50</span> <!-- Movido para fora da barra para ser texto -->
-                    </div>
+                        <span id="bossProgressText">0 / 50</span> </div>
                 </div>
             </div>
 
-            <!-- Right Sidebar for Health Bar -->
             <div class="sidebar-container right-sidebar">
                 <i class="fas fa-heart sidebar-icon"></i>
                 <div class="sidebar-bar-wrapper">
                     <div class="vertical-bar" id="playerHealthBar">
                         <div class="vertical-fill" id="healthFill"></div>
-                        <div class="vertical-overshield-fill" id="overshieldFill"></div> <!-- NOVO: Barra de sobrevida -->
-                        <span class="vertical-text" id="playerHealthText"></span>
+                        <div class="vertical-overshield-fill" id="overshieldFill"></div> <span class="vertical-text" id="playerHealthText"></span>
                     </div>
                 </div>
             </div>
@@ -884,7 +1008,11 @@
             pauseContinueText, rankingScreen, highScoresList, nameInputForm, 
             playerNameInput, submitScoreButton, rankingPlayAgainButton, showRankingButton,
             backToStartScreenButton, stageScoreDisplay, pauseRankingContainer, pauseHighScoresList,
-            resumeButton, pauseShowRankingButton, pauseRestartButton, particleContainer; // Adicionado particleContainer
+            resumeButton, pauseShowRankingButton, pauseRestartButton, particleContainer,
+            loadingScreen, loadingProgressFill, settingsButton, settingsScreen, toggleShotSoundCheckbox, toggleAmbientMusicCheckbox, toggleExplosionSoundCheckbox, backToPreviousScreenFromSettingsButton, pauseSettingsButton; // Adicionado elementos da tela de configurações
+
+        // Variável para rastrear a tela anterior antes de ir para as configurações
+        let previousScreen = null;
 
         // Segmentos de fundo
         const bgSegment1 = document.getElementById('bgSegment1');
@@ -1027,7 +1155,7 @@
         const powerUpTypes = [
             { type: 'damage_1', text: '+1', color: '#FF4500', damageIncrease: 1, sprite: 'https://i.ibb.co/tpmGNwnx/file-00000000c23c61f79d81df79065596e4.png', hueRotate: 0 }, // Laranja
             { type: 'side_bullets', text: '>>', color: '#FFFF00', damageIncrease: 0, sprite: 'https://i.ibb.co/6JGv0Nk7/file-00000000f4c461f7a9330c93bf5d848c.png', hueRotate: 0 }, // Amarelo
-            { type: 'shield', text: 'ESC', color: '#0000FF', damageIncrease: 0, sprite: 'https://i.ibb.co/HfN8Wkv3/file-00000000553861f78733587cf43f0566.png', hueRotate: 0 }, // Azul
+            { type: 'shield', text: 'ESC', color: '#0000FF', damageIncrease: 0, sprite: 'https://i.ibb.co/HfN8Wkv3/file-00000000553861f787335877cf43f0566.png', hueRotate: 0 }, // Azul
         ];
         // Novo tipo de power-up de vida (adicionado separadamente para controle de spawn)
         const healthPowerUpType = { type: 'health_up', text: '❤️', color: '#00FF00', healthIncrease: 20, sprite: 'https://i.ibb.co/RpmCgPyD/file-00000000fdf061f59a3de32e7e743922-1.png', hueRotate: 0 }; // Verde
@@ -1063,20 +1191,235 @@
         let touchStartY = 0; 
         let playerMoving = false;
 
+        // Referência aos recursos de áudio e imagem para pré-carregamento (APENAS IMAGENS E MÚSICAS DE FUNDO/BOSS)
+        const ASSETS_TO_PRELOAD = [
+            'https://i.ibb.co/fYVsCnG4/file-000000003bdc622f9c39eafbf705cd33.png', // background-segment
+            'https://i.ibb.co/mrgQRnPP/file-00000000bd8861f8b1feda6cccc966af.png', // player
+            'https://i.ibb.co/TMFR5810/file-00000000646c61f8b1feda6cccc966af.png', // falling-object (inimigo normal)
+            'https://i.ibb.co/WWJbQ2xC/file-0000000084d061f8ac4929730520d69e.png', // boss
+            'https://i.ibb.co/LztRMfLf/file-000000003cc4622f93ccd51271bb76c1.png', // heavy_enemy
+            'https://i.ibb.co/GQNYF8tQ/file-000000007a5c61f7ab26c44fcda85d3b.png', // obstacle
+            'https://i.ibb.co/tpmGNwnx/file-00000000c23c61f79d81df79065596e4.png', // power-up damage_1
+            'https://i.ibb.co/6JGv0Nk7/file-00000000f4c461f7a9330c93bf5d848c.png', // power-up side_bullets
+            'https://i.ibb.co/HfN8Wkv3/file-00000000553861f787335877cf43f0566.png', // power-up shield
+            'https://i.ibb.co/RpmCgPyD/file-00000000fdf061f59a3de32e7e743922-1.png', // power-up health_up
+            'https://i.ibb.co/FbvqcCqK/file-000000007ee861fdb4cec6e89e0ac0ba.png', // debuff
+            'https://i.ibb.co/JjxJVM6D/1753025379623.png', // start-screen background
+            'https://cdn.pixabay.com/audio/2025/05/29/audio_dc0f9df613.mp3', // backgroundMusic (NOVO URL)
+            'https://cdn.pixabay.com/audio/2021/10/08/audio_293093f302.mp3', // bossMusic (NOVO URL)
+            'https://cdn.pixabay.com/audio/2025/05/12/audio_93c74aa0b8.mp3' // enemyExplosionSound (NOVO URL)
+        ];
+
         // Referência ao elemento de áudio
-        const backgroundMusic = new Audio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3'); 
+        const backgroundMusic = new Audio(); 
         backgroundMusic.loop = true; 
         backgroundMusic.volume = 0.5; 
 
-        const playerShotSound = new Audio('https://cdn.pixabay.com/download/audio/2022/03/10/audio_f8319f0956.mp3?filename=gun-gun-shot-6133.mp3'); 
+        // Sons de tiro serão carregados dinamicamente
+        const playerShotSound = new Audio(); 
         playerShotSound.volume = 0.3;
 
-        const enemyShotSound = new Audio('https://cdn.pixabay.com/download/audio/2022/03/15/audio_2435555416.mp3?filename=laser-gun-8178.mp3'); 
+        const enemyShotSound = new Audio(); 
         enemyShotSound.volume = 0.2;
 
-        const bossMusic = new Audio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'); 
+        const bossMusic = new Audio(); 
         bossMusic.loop = true;
         bossMusic.volume = 0.6;
+        
+        // Novo som de explosão de inimigo
+        const enemyExplosionSound = new Audio();
+        enemyExplosionSound.volume = 0.4;
+
+        // Variáveis de controle de som
+        let isShotSoundEnabled = true;
+        let isAmbientMusicEnabled = true;
+        let isExplosionSoundEnabled = true; // Nova variável para o som de explosão
+        const SOUND_SETTINGS_KEY = 'tiroNoMetroSoundSettings';
+
+        /**
+         * Carrega as configurações de som do localStorage.
+         */
+        function loadSoundSettings() {
+            const savedSettings = localStorage.getItem(SOUND_SETTINGS_KEY);
+            if (savedSettings) {
+                const settings = JSON.parse(savedSettings);
+                isShotSoundEnabled = settings.isShotSoundEnabled;
+                isAmbientMusicEnabled = settings.isAmbientMusicEnabled;
+                isExplosionSoundEnabled = settings.isExplosionSoundEnabled; // Carrega a nova configuração
+            }
+        }
+
+        /**
+         * Salva as configurações de som no localStorage.
+         */
+        function saveSoundSettings() {
+            const settings = {
+                isShotSoundEnabled: isShotSoundEnabled,
+                isAmbientMusicEnabled: isAmbientMusicEnabled,
+                isExplosionSoundEnabled: isExplosionSoundEnabled // Salva a nova configuração
+            };
+            localStorage.setItem(SOUND_SETTINGS_KEY, JSON.stringify(settings));
+        }
+
+        /**
+         * Atualiza o estado dos checkboxes de som na tela de configurações.
+         */
+        function updateSoundSettingsUI() {
+            if (toggleShotSoundCheckbox) {
+                toggleShotSoundCheckbox.checked = isShotSoundEnabled;
+            }
+            if (toggleAmbientMusicCheckbox) {
+                toggleAmbientMusicCheckbox.checked = isAmbientMusicEnabled;
+            }
+            if (toggleExplosionSoundCheckbox) { // Atualiza o novo checkbox
+                toggleExplosionSoundCheckbox.checked = isExplosionSoundEnabled;
+            }
+        }
+
+        /**
+         * Realiza um fade-out suave em um elemento de áudio.
+         * @param {HTMLAudioElement} audio - O elemento de áudio a ser desvanecido.
+         * @param {function} callback - Função a ser chamada após o fade-out.
+         */
+        function fadeOut(audio, callback) {
+            const fadeDuration = 500; // ms
+            const fadeInterval = 50; // ms
+            const originalVolume = audio.volume; // Salva o volume original
+            let currentVolume = audio.volume;
+
+            const fadeAudio = setInterval(() => {
+                currentVolume -= originalVolume * (fadeInterval / fadeDuration);
+                if (currentVolume <= 0) {
+                    audio.volume = 0;
+                    audio.pause();
+                    audio.currentTime = 0; // Reseta a música
+                    clearInterval(fadeAudio);
+                    if (callback) callback();
+                } else {
+                    audio.volume = currentVolume;
+                }
+            }, fadeInterval);
+        }
+
+        /**
+         * Realiza um fade-in suave em um elemento de áudio.
+         * @param {HTMLAudioElement} audio - O elemento de áudio a ser desvanecido.
+         * @param {number} targetVolume - O volume final desejado.
+         * @param {function} callback - Função a ser chamada após o fade-in.
+         */
+        function fadeIn(audio, targetVolume, callback) {
+            const fadeDuration = 500; // ms
+            const fadeInterval = 50; // ms
+            let currentVolume = 0;
+            audio.volume = 0;
+            audio.play().catch(e => console.log("Erro ao tentar tocar música (fadeIn):", e));
+
+            const fadeAudio = setInterval(() => {
+                currentVolume += targetVolume * (fadeInterval / fadeDuration);
+                if (currentVolume >= targetVolume) {
+                    audio.volume = targetVolume;
+                    clearInterval(fadeAudio);
+                    if (callback) callback();
+                } else {
+                    audio.volume = currentVolume;
+                }
+            }, fadeInterval);
+        }
+
+        /**
+         * Aplica as configurações de música imediatamente.
+         */
+        function applyMusicSettings() {
+            if (isAmbientMusicEnabled) {
+                if (gameRunning && !gamePaused) { // Só toca se o jogo estiver rodando e não pausado
+                    if (isBossFightActive) {
+                        // Se a música de fundo estiver tocando, faça fadeOut antes de tocar a do boss
+                        if (!backgroundMusic.paused && backgroundMusic.volume > 0) {
+                            fadeOut(backgroundMusic, () => {
+                                fadeIn(bossMusic, 0.6); // Toca a música do boss com fade-in
+                            });
+                        } else {
+                            fadeIn(bossMusic, 0.6); // Toca a música do boss com fade-in
+                        }
+                    } else {
+                        // Se a música do boss estiver tocando, faça fadeOut antes de tocar a de fundo
+                        if (!bossMusic.paused && bossMusic.volume > 0) {
+                            fadeOut(bossMusic, () => {
+                                fadeIn(backgroundMusic, 0.5); // Toca a música de fundo com fade-in
+                            });
+                        } else {
+                            fadeIn(backgroundMusic, 0.5); // Toca a música de fundo com fade-in
+                        }
+                    }
+                }
+            } else {
+                backgroundMusic.pause();
+                bossMusic.pause();
+            }
+        }
+
+
+        /**
+         * Pré-carrega todos os assets do jogo e os armazena no Cache Storage.
+         * Atualiza uma barra de progresso durante o carregamento.
+         * @returns {Promise<void>} Uma promessa que resolve quando todos os assets estão carregados.
+         */
+        async function preloadAssets() {
+            const cacheName = 'tiro-no-metro-assets-v1'; // Nome do cache
+            let loadedCount = 0;
+            const totalAssets = ASSETS_TO_PRELOAD.length;
+
+            try {
+                const cache = await caches.open(cacheName); // Abre ou cria o cache
+
+                const fetchPromises = ASSETS_TO_PRELOAD.map(async (url) => {
+                    const response = await fetch(url);
+                    if (!response.ok) {
+                        console.warn(`Falha ao carregar asset: ${url}. Status: ${response.status}`);
+                        return; // Continua mesmo se um asset falhar
+                    }
+                    await cache.put(url, response.clone()); // Armazena no cache
+
+                    // Para áudios que DEVEM ser pré-carregados (músicas de fundo/boss/explosão)
+                    if (url.includes('audio_dc0f9df613.mp3')) { // backgroundMusic
+                        backgroundMusic.src = url;
+                        await backgroundMusic.load();
+                    } else if (url.includes('audio_293093f302.mp3')) { // bossMusic
+                        bossMusic.src = url;
+                        await bossMusic.load();
+                    } else if (url.includes('audio_93c74aa0b8.mp3')) { // enemyExplosionSound
+                        enemyExplosionSound.src = url;
+                        await enemyExplosionSound.load();
+                    }
+
+                    loadedCount++;
+                    const progress = (loadedCount / totalAssets) * 100;
+                    if (loadingProgressFill) {
+                        loadingProgressFill.style.width = `${progress}%`;
+                    }
+                    console.log(`Carregado: ${url} (${loadedCount}/${totalAssets})`);
+                });
+
+                await Promise.all(fetchPromises);
+                console.log("Todos os assets pré-carregados e cacheados!");
+
+            } catch (error) {
+                console.error("Erro durante o pré-carregamento de assets:", error);
+                console.warn("Tentando carregar assets diretamente devido a erro no cache ou CORS.");
+                // Fallback: carregar diretamente sem cache, usando as URLs atualizadas
+                ASSETS_TO_PRELOAD.forEach(url => {
+                    if (url.endsWith('.mp3')) {
+                        if (url.includes('audio_dc0f9df613.mp3')) backgroundMusic.src = url;
+                        else if (url.includes('audio_293093f302.mp3')) bossMusic.src = url;
+                        else if (url.includes('audio_93c74aa0b8.mp3')) enemyExplosionSound.src = url;
+                    } else {
+                        const img = new Image();
+                        img.src = url;
+                    }
+                });
+            }
+        }
+
 
         /**
          * Solicita o modo tela cheia para o documento.
@@ -1162,6 +1505,7 @@
             pauseScreen.classList.add('hidden'); 
             rankingScreen.classList.add('hidden'); // Esconde a tela de ranking
             nameInputForm.classList.add('hidden'); // Esconde o formulário de nome
+            settingsScreen.classList.add('hidden'); // Esconde a tela de configurações
 
             playerX = gameContainer.offsetWidth / 2 - player.offsetWidth / 2;
             playerY = gameContainer.offsetHeight - player.offsetHeight - 20; 
@@ -1182,9 +1526,7 @@
             startGameLoop();
             console.log('initializeGame: isBossFightActive =', isBossFightActive); 
 
-            backgroundMusic.play().catch(e => console.log("Erro ao tentar tocar música:", e)); 
-            bossMusic.pause(); 
-            bossMusic.currentTime = 0;
+            applyMusicSettings(); // Aplica as configurações de música ao iniciar o jogo
         }
 
         /**
@@ -1233,9 +1575,7 @@
             startGameLoop();
             console.log('startNextStage: Game loop restarted.'); // Log de reinício do loop
 
-            backgroundMusic.play().catch(e => console.log("Erro ao tentar tocar música:", e)); 
-            bossMusic.pause(); 
-            bossMusic.currentTime = 0;
+            applyMusicSettings(); // Aplica as configurações de música ao iniciar o próximo estágio
         }
 
         /**
@@ -1385,12 +1725,8 @@
             }
 
             for (let i = 0; i < maxAttempts; i++) {
-                if (isHeavyEnemy) {
-                    tempLeft = Math.random() * (gameContainer.offsetWidth - tempWidth);
-                } else { 
-                    tempLeft = Math.random() * (gameContainer.offsetWidth - tempWidth);
-                    tempTop = -tempHeight;
-                }
+                let tempLeft = Math.random() * (gameContainer.offsetWidth - tempWidth); 
+                let tempTop = -tempHeight; 
 
                 const hypotheticalRect = {
                     left: tempLeft,
@@ -1513,8 +1849,12 @@
                 bullet.dataset.dy = bulletSpeed; 
                 gameContainer.appendChild(bullet);
                 bullets.push(bullet);
-                playerShotSound.currentTime = 0; 
-                playerShotSound.play().catch(e => console.log("Erro ao tocar som de tiro do player:", e));
+                // Carrega e toca o som de tiro do player dinamicamente
+                if (isShotSoundEnabled) { // Verifica se o som do tiro está ativado
+                    playerShotSound.src = 'https://cdn.pixabay.com/audio/2024/08/30/audio_68d83e5b2d.mp3'; // NOVO URL
+                    playerShotSound.currentTime = 0; 
+                    playerShotSound.play().catch(e => console.log("Erro ao tocar som de tiro do player:", e));
+                }
             };
 
             // Bala central
@@ -1565,7 +1905,7 @@
          */
         function createCollectible(x, y, currentTime, forcedType = null) {
             const collectible = document.createElement('div');
-            const powerUpSize = 30 * 1.2; 
+            const powerUpSize = 36; /* 20% maior */ 
             collectible.style.width = `${powerUpSize}px`;
             collectible.style.height = `${powerUpSize}px`;
             collectible.style.left = `${x}px`;
@@ -1596,7 +1936,7 @@
             }
             
             collectible.dataset.type = selectedCollectibleType.type; 
-            if (selectedCollectibleType.type === 'debuff') {
+            if (collectible.classList.contains('debuff')) {
                 collectible.classList.add('debuff');
             } else {
                 collectible.classList.add('power-up');
@@ -1744,8 +2084,12 @@
             enemyBullet.dataset.isHeavyBullet = isHeavyBullet; 
             gameContainer.appendChild(enemyBullet);
             enemyBullets.push(enemyBullet);
-            enemyShotSound.currentTime = 0; 
-            enemyShotSound.play().catch(e => console.log("Erro ao tocar som de tiro do inimigo:", e));
+            // Carrega e toca o som de tiro do inimigo dinamicamente
+            if (isShotSoundEnabled) { // Verifica se o som do tiro está ativado
+                enemyShotSound.src = 'https://cdn.pixabay.com/audio/2024/08/30/audio_68d83e5b2d.mp3'; // Usando o mesmo som de tiro do player por simplicidade
+                enemyShotSound.currentTime = 0; 
+                enemyShotSound.play().catch(e => console.log("Erro ao tocar som de tiro do inimigo:", e));
+            }
         }
 
         /**
@@ -1767,11 +2111,58 @@
                 particle.style.top = `${y + (Math.random() * 20 - 10)}px`;
                 particle.style.width = `${particleSize}px`;
                 particle.style.height = `${particleSize}px`;
-                particle.style.backgroundColor = color;
+                // Define a cor da partícula usando a variável CSS --particle-color
+                particle.style.setProperty('--particle-color', color);
 
                 // Direção e distância aleatórias para a animação
                 const angle = Math.random() * Math.PI * 2; // Ângulo aleatório em radianos
                 const distance = 30 + Math.random() * 50; // Distância de explosão
+                const dx = Math.cos(angle) * distance;
+                const dy = Math.sin(angle) * distance;
+
+                particle.style.setProperty('--particle-dx', `${dx}px`);
+                particle.style.setProperty('--particle-dy', `${dy}px`);
+
+                particleContainer.appendChild(particle);
+
+                // Remove a partícula após a animação
+                particle.addEventListener('animationend', () => {
+                    particle.remove();
+                });
+            }
+            if (isExplosionSoundEnabled) { // Toca o som de explosão se ativado
+                enemyExplosionSound.currentTime = 0;
+                enemyExplosionSound.play().catch(e => console.log("Erro ao tocar som de explosão:", e));
+            }
+        }
+
+        /**
+         * NOVO: Cria e anima pequenas partículas de acerto (hit) no local de um inimigo atingido.
+         * @param {number} x - Posição X do objeto (inimigo/player).
+         * @param {number} y - Posição Y do objeto (inimigo/player).
+         * @param {string} color - Cor base das partículas (ex: '#FF0000').
+         * @param {number} [baseSize=60] - Tamanho base do objeto para proporcionalidade (60px para inimigos normais, 100px para boss, 60px para player)
+         */
+        function createHitParticles(x, y, color, baseSize = 60) {
+            const numberOfParticles = 7; // Mais partículas para mais impacto
+            // Tamanho das partículas é proporcional ao tamanho do objeto atingido
+            const particleSizeMultiplier = baseSize / 60; // Baseado no tamanho padrão de 60px para inimigo normal
+            const particleSize = (5 + Math.random() * 10) * particleSizeMultiplier; // Mesma faixa de tamanho que as partículas de explosão, mas escalado
+
+            for (let i = 0; i < numberOfParticles; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('hit-particle'); // Usa a nova classe
+                
+                // Posição inicial da partícula no centro do impacto, com uma pequena variação
+                particle.style.left = `${x + (Math.random() * 10 - 5)}px`; 
+                particle.style.top = `${y + (Math.random() * 10 - 5)}px`;
+                particle.style.width = `${particleSize}px`;
+                particle.style.height = `${particleSize}px`;
+                particle.style.setProperty('--particle-color', color);
+
+                // Direção e distância aleatórias para a animação (mais curtas)
+                const angle = Math.random() * Math.PI * 2;
+                const distance = (10 + Math.random() * 20) * particleSizeMultiplier; // Distância de explosão menor, mas escalada
                 const dx = Math.cos(angle) * distance;
                 const dy = Math.sin(angle) * distance;
 
@@ -1892,6 +2283,11 @@
                             if (bossHealth <= 0) {
                                 handleBossDefeated(); 
                                 return; 
+                            } else {
+                                // Boss atingido, mas não derrotado: criar partículas de acerto
+                                const bossX = parseFloat(boss.style.left) + boss.offsetWidth / 2;
+                                const bossY = parseFloat(boss.style.top) + boss.offsetHeight / 2;
+                                createHitParticles(bossX, bossY, '#ffffff', boss.offsetWidth); // Partículas brancas para o boss, tamanho proporcional ao boss
                             }
                             continue; 
                         }
@@ -1929,32 +2325,34 @@
                                 }
                             }
 
+                            // Lógica para determinar a cor da partícula (tanto para hit quanto para death)
+                            const enemyX = parseFloat(object.style.left) + object.offsetWidth / 2;
+                            const enemyY = parseFloat(object.style.top) + object.offsetHeight / 2;
+                            let particleColor = '#f6e05e'; // Cor padrão da partícula
+                            if (object.dataset.isHeavy === 'true') {
+                                particleColor = '#FF4500'; // Vermelho/Laranja para heavy enemy
+                            } else {
+                                const hueRotateMatch = object.style.filter.match(/hue-rotate\((\d+)deg\)/);
+                                if (hueRotateMatch && hueRotateMatch[1]) {
+                                    const hue = parseInt(hueRotateMatch[1]);
+                                    if (hue >= 0 && hue < 60) particleColor = '#f6e05e'; // Amarelo
+                                    else if (hue >= 60 && hue < 120) particleColor = '#7ed321'; // Verde
+                                    else if (hue >= 120 && hue < 180) particleColor = '#00BFFF'; // Azul claro
+                                    else if (hue >= 180 && hue < 240) particleColor = '#bd10e0'; // Roxo
+                                    else if (hue >= 240 && hue < 300) particleColor = '#FF69B4'; // Rosa
+                                    else particleColor = '#f6e05e'; // Padrão
+                                }
+                            }
+
                             if (hitsRemaining > 0) {
                                 object.classList.add('enemy-hit-effect');
                                 setTimeout(() => {
                                     object.classList.remove('enemy-hit-effect');
                                 }, 100); 
+                                // Inimigo atingido, mas não derrotado: criar partículas de acerto
+                                createHitParticles(enemyX, enemyY, particleColor, object.offsetWidth);
                             } else {
-                                // Inimigo derrotado: Criar partículas
-                                const enemyX = parseFloat(object.style.left) + object.offsetWidth / 2;
-                                const enemyY = parseFloat(object.style.top) + object.offsetHeight / 2;
-                                let particleColor = '#f6e05e'; // Cor padrão da partícula
-                                if (object.dataset.isHeavy === 'true') {
-                                    particleColor = '#FF4500'; // Vermelho/Laranja para heavy enemy
-                                } else {
-                                    // Tenta obter a cor base do inimigo normal (do filtro hue-rotate)
-                                    const hueRotateMatch = object.style.filter.match(/hue-rotate\((\d+)deg\)/);
-                                    if (hueRotateMatch && hueRotateMatch[1]) {
-                                        // Converte o hue para uma cor aproximada (simplificado)
-                                        const hue = parseInt(hueRotateMatch[1]);
-                                        if (hue >= 0 && hue < 60) particleColor = '#f6e05e'; // Amarelo
-                                        else if (hue >= 60 && hue < 120) particleColor = '#7ed321'; // Verde
-                                        else if (hue >= 120 && hue < 180) particleColor = '#00BFFF'; // Azul claro
-                                        else if (hue >= 180 && hue < 240) particleColor = '#bd10e0'; // Roxo
-                                        else if (hue >= 240 && hue < 300) particleColor = '#FF69B4'; // Rosa
-                                        else particleColor = '#f6e05e'; // Padrão
-                                    }
-                                }
+                                // Inimigo derrotado: Criar partículas de explosão
                                 createParticles(enemyX, enemyY, particleColor);
 
                                 object.remove();
@@ -1970,7 +2368,9 @@
                                     const forcedPowerUp = positivePowerUps[Math.floor(Math.random() * positivePowerUps.length)];
                                     createCollectible(objectRect.left - gameRect.left, objectRect.top - gameRect.top, performance.now(), forcedPowerUp.type);
                                 } else {
-                                    score++; 
+                                    // A cada stage, os inimigos passam a dar +20% de pontos
+                                    const scoreMultiplier = 1 + (bossLevel * 0.20);
+                                    score += Math.floor(1 * scoreMultiplier); // Arredonda para baixo para não mostrar decimais
                                     if (Math.random() < collectibleDropChance) { 
                                         const gameRect = gameContainer.getBoundingClientRect(); 
                                         createCollectible(objectRect.left - gameRect.left, objectRect.top - gameRect.top, performance.now()); 
@@ -2083,7 +2483,6 @@
                         enemyBullets.splice(i, 1);
                         i--;
 
-                        // Pega o dano base da bala do inimigo (se for heavy, usa o baseBulletDamage do dataset)
                         let damageToApply;
                         if (eBullet.dataset.isHeavyBullet === 'true') {
                             damageToApply = parseFloat(eBullet.dataset.baseBulletDamage);
@@ -2121,6 +2520,8 @@
                         setTimeout(() => {
                             player.classList.remove('player-hit-effect'); 
                         }, 150); 
+                        // Player atingido: criar partículas de acerto vermelhas
+                        createHitParticles(playerX + player.offsetWidth / 2, playerY + player.offsetHeight / 2, '#FF0000', player.offsetWidth);
                     }
                 }
             } catch (error) {
@@ -2186,6 +2587,8 @@
                         setTimeout(() => {
                             player.classList.remove('player-hit-effect'); 
                         }, 150); 
+                        // Player atingido: criar partículas de acerto vermelhas
+                        createHitParticles(playerX + player.offsetWidth / 2, playerY + player.offsetHeight / 2, '#FF0000', player.offsetWidth);
                     }
                 }
             } catch (error) {
@@ -2262,7 +2665,7 @@
             if (type === 'damage_down') {
                 console.log("DEBUFF - Antes: Stage:", currentBulletStage, "Side Shots:", currentSideShotsLevel, "Damage Bonus:", damage1Bonus);
 
-                // Reduz o bônus de dano de +1
+                // Reduz o bônus de dano de +1, garantindo que não fique negativo
                 damage1Bonus = Math.max(0, damage1Bonus - 1);
 
                 if (currentBulletStage > 0) {
@@ -2396,16 +2799,22 @@
             currentBossBulletDamage = initialBossBulletDamage * (1 + bossLevel * 0.10); 
             bossRageThreshold = bossHealth * 0.35; 
             bossRageActive = false; 
-            lastBossPowerUpDropTime = performance.now(); 
+            lastBossPowerUpDropTime = 0; 
 
             console.log(`Boss Level: ${bossLevel}, Boss Health: ${bossHealth}, Boss Bullet Damage: ${currentBossBulletDamage}, Rage Threshold: ${bossRageThreshold}`); 
 
             createBoss();
             lastBossShotTime = performance.now(); 
 
-            backgroundMusic.pause(); 
-            backgroundMusic.currentTime = 0; 
-            bossMusic.play().catch(e => console.log("Erro ao tocar música do boss:", e)); 
+            // Controla a música: pausa a de fundo e toca a do boss com fade
+            if (isAmbientMusicEnabled) {
+                fadeOut(backgroundMusic, () => {
+                    fadeIn(bossMusic, 0.6); // Toca a música do boss com fade-in
+                });
+            } else {
+                backgroundMusic.pause();
+                bossMusic.pause();
+            }
         }
 
         /**
@@ -2762,6 +3171,8 @@
                         setTimeout(() => {
                             player.classList.remove('player-hit-effect');
                         }, 150); 
+                        // Player atingido: criar partículas de acerto vermelhas
+                        createHitParticles(playerX + player.offsetWidth / 2, playerY + player.offsetHeight / 2, '#FF0000', player.offsetWidth);
                     }
                 }
             } catch (error) {
@@ -2792,8 +3203,16 @@
 
             stageClearScreen.classList.remove('hidden'); 
             console.log('handleBossDefeated: Stage Clear screen shown.'); // Log de tela de estágio concluído
-            bossMusic.pause(); 
-            bossMusic.currentTime = 0;
+            
+            // Controla a música: pausa a do boss e retoma a de fundo com fade
+            if (isAmbientMusicEnabled) {
+                fadeOut(bossMusic, () => {
+                    fadeIn(backgroundMusic, 0.5); // Toca a música de fundo com fade-in
+                });
+            } else {
+                backgroundMusic.pause();
+                bossMusic.pause();
+            }
         }
 
         /**
@@ -2902,6 +3321,8 @@
             cancelAnimationFrame(animationFrameId);
             clearGameElements(); // Garante que todos os elementos sejam removidos ao game over
             finalScoreDisplay.textContent = score;
+            
+            // Pausa e reseta ambas as músicas ao Game Over
             backgroundMusic.pause(); 
             backgroundMusic.currentTime = 0; 
             bossMusic.pause(); 
@@ -2944,9 +3365,9 @@
                 cancelAnimationFrame(animationFrameId);
                 pauseScreen.classList.remove('hidden');
                 pauseRankingContainer.classList.add('hidden'); // Esconde o ranking por padrão
-                pauseContinueText.classList.remove('hidden'); // Mostra o texto "CONTINUAR"
-                backgroundMusic.pause();
-                bossMusic.pause();
+                pauseContinueText.classList.remove('hidden'); // Esconde o texto "CONTINUAR"
+                backgroundMusic.pause(); // Pausa a música de fundo
+                bossMusic.pause(); // Pausa a música do boss
             }
         }
 
@@ -2958,10 +3379,12 @@
                 gamePaused = false;
                 pauseScreen.classList.add('hidden');
                 startGameLoop();
-                if (isBossFightActive) {
-                    bossMusic.play().catch(e => console.log("Erro ao tocar música do boss:", e));
-                } else {
-                    backgroundMusic.play().catch(e => console.log("Erro ao tocar música de fundo:", e));
+                if (isAmbientMusicEnabled) { // Verifica se a música ambiente está ativada
+                    if (isBossFightActive) {
+                        bossMusic.play().catch(e => console.log("Erro ao tocar música do boss:", e));
+                    } else {
+                        backgroundMusic.play().catch(e => console.log("Erro ao tocar música de fundo:", e));
+                    }
                 }
             }
         }
@@ -3018,7 +3441,6 @@
                 return scores;
             } catch (e) {
                 console.error("Error getting documents: ", e);
-                return [];
             }
         }
 
@@ -3095,9 +3517,22 @@
             resumeButton = document.getElementById('resumeButton');
             pauseShowRankingButton = document.getElementById('pauseShowRankingButton');
             pauseRestartButton = document.getElementById('pauseRestartButton');
+            pauseSettingsButton = document.getElementById('pauseSettingsButton'); // Novo botão de configurações na pausa
 
             // Referência ao novo contêiner de partículas
             particleContainer = document.getElementById('particleContainer');
+
+            // Referências para a tela de carregamento
+            loadingScreen = document.getElementById('loadingScreen');
+            loadingProgressFill = document.getElementById('loadingProgressFill');
+
+            // Referências para os elementos da tela de configurações
+            settingsButton = document.getElementById('settingsButton');
+            settingsScreen = document.getElementById('settingsScreen');
+            toggleShotSoundCheckbox = document.getElementById('toggleShotSound');
+            toggleAmbientMusicCheckbox = document.getElementById('toggleAmbientMusic');
+            toggleExplosionSoundCheckbox = document.getElementById('toggleExplosionSound'); // Novo checkbox
+            backToPreviousScreenFromSettingsButton = document.getElementById('backToPreviousScreenFromSettings');
 
 
             // --- Eventos de Controle ---
@@ -3112,15 +3547,26 @@
 
             gameContainer.addEventListener('touchmove', (e) => {
                 if (!gameRunning || !playerMoving || gamePaused) return;
+                const gameContainerRect = gameContainer.getBoundingClientRect(); // Obtenha o retângulo do contêiner do jogo
+
+                // Certifique-se de que playerX e playerY estão atualizados a partir da posição do elemento player
+                // Já que o player se move tanto por teclado quanto por mouse/toque, é melhor sempre recalcular
+                const currentPlayerLeft = parseFloat(player.style.left);
+                const currentPlayerBottom = parseFloat(player.style.bottom);
+                playerX = currentPlayerLeft;
+                playerY = gameContainer.offsetHeight - currentPlayerBottom - player.offsetHeight;
+
+
                 const touchCurrentX = e.touches[0].clientX;
                 const touchCurrentY = e.touches[0].clientY; 
                 const deltaX = touchCurrentX - touchStartX;
                 const deltaY = touchCurrentY - touchStartY; 
                 
-                playerX += deltaX * 1.0; 
-                playerX = Math.max(0, Math.min(playerX, gameContainer.offsetWidth - player.offsetWidth));
+                // Mova o player com base na diferença do toque, mas dentro dos limites do gameContainer
+                playerX += deltaX;
+                playerY += deltaY;
 
-                playerY += deltaY * 1.0; 
+                playerX = Math.max(0, Math.min(playerX, gameContainer.offsetWidth - player.offsetWidth));
                 playerY = Math.max(0, Math.min(playerY, gameContainer.offsetHeight - player.offsetHeight));
 
                 updatePlayerPosition();
@@ -3135,8 +3581,8 @@
             // Controle de Teclado (Desktop)
             document.addEventListener('keydown', (e) => {
                 if (!gameRunning || gamePaused) return;
-                const playerRect = player.getBoundingClientRect();
-                const gameContainerRect = gameContainer.getBoundingClientRect();
+                // const playerRect = player.getBoundingClientRect(); // Não é mais necessário aqui
+                // const gameContainerRect = gameContainer.getBoundingClientRect(); // Não é mais necessário aqui
 
                 // Get current player position relative to game container
                 playerX = parseFloat(player.style.left);
@@ -3183,6 +3629,7 @@
             
             // Evento no div startScreen para iniciar o jogo (qualquer toque/clique)
             startScreen.addEventListener('click', () => { 
+                if (startScreen.classList.contains('hidden')) return; // Só funciona se a tela inicial estiver visível
                 initializeGame();
                 toggleFullScreen(); 
             }); 
@@ -3210,6 +3657,14 @@
             });
 
             pauseRestartButton.addEventListener('click', initializeGame);
+
+            // Botão de Configurações na tela de pausa
+            pauseSettingsButton.addEventListener('click', () => {
+                pauseScreen.classList.add('hidden');
+                settingsScreen.classList.remove('hidden');
+                updateSoundSettingsUI(); // Atualiza os checkboxes ao abrir a tela
+                previousScreen = 'pause'; // Define a tela anterior como pausa
+            });
 
 
             // Botão de Enviar Pontuação (na tela de Ranking)
@@ -3255,6 +3710,40 @@
                 rankingScreen.classList.add('hidden');
                 startScreen.classList.remove('hidden');
             });
+
+            // Eventos da nova tela de configurações
+            settingsButton.addEventListener('click', () => {
+                startScreen.classList.add('hidden');
+                settingsScreen.classList.remove('hidden');
+                updateSoundSettingsUI(); // Atualiza os checkboxes ao abrir a tela
+                previousScreen = 'start'; // Define a tela anterior como início
+            });
+
+            toggleShotSoundCheckbox.addEventListener('change', () => {
+                isShotSoundEnabled = toggleShotSoundCheckbox.checked;
+                saveSoundSettings();
+            });
+
+            toggleAmbientMusicCheckbox.addEventListener('change', () => {
+                isAmbientMusicEnabled = toggleAmbientMusicCheckbox.checked;
+                saveSoundSettings();
+                applyMusicSettings(); // Aplica a mudança de música imediatamente
+            });
+
+            toggleExplosionSoundCheckbox.addEventListener('change', () => { // Evento para o novo checkbox
+                isExplosionSoundEnabled = toggleExplosionSoundCheckbox.checked;
+                saveSoundSettings();
+            });
+
+            backToPreviousScreenFromSettingsButton.addEventListener('click', () => {
+                settingsScreen.classList.add('hidden');
+                if (previousScreen === 'pause') {
+                    pauseScreen.classList.remove('hidden');
+                } else {
+                    startScreen.classList.remove('hidden');
+                }
+                previousScreen = null; // Reseta a tela anterior
+            });
         }
 
 
@@ -3262,18 +3751,34 @@
         window.onload = async () => {
             // Configura os event listeners e obtém as referências DOM primeiro
             setupEventListeners();
-            // Em seguida, inicializa o Firebase e a autenticação
-            // A autenticação Firebase já é tratada pelo onAuthStateChanged que é disparado na inicialização do app.
-            // Não precisamos de uma função initializeFirebaseAndAuth separada aqui, pois a lógica já está no script type="module".
+            
+            // Exibe a tela de carregamento
+            loadingScreen.classList.remove('hidden');
+            console.log("window.onload: Tela de carregamento visível.");
 
+            // Carrega as configurações de som antes do pré-carregamento para que a música inicial respeite as preferências
+            loadSoundSettings();
+
+            // Pré-carrega os assets (apenas imagens e músicas de fundo/boss)
+            await preloadAssets();
+            console.log("window.onload: Pré-carregamento de assets concluído.");
+
+            // Esconde a tela de carregamento e mostra a tela inicial
+            loadingScreen.classList.add('hidden');
             startScreen.classList.remove('hidden');
+            console.log("window.onload: Tela de carregamento escondida, tela inicial visível.");
+            
+            // Garante que outras telas de jogo estejam escondidas no início
             gameOverScreen.classList.add('hidden'); 
             stageClearScreen.classList.add('hidden'); 
             pauseScreen.classList.add('hidden'); 
             rankingScreen.classList.add('hidden'); 
             nameInputForm.classList.add('hidden'); 
+            settingsScreen.classList.add('hidden'); // Garante que a tela de configurações esteja escondida no início
+            
             gameRunning = false; 
             gamePaused = false; 
+            console.log("window.onload: Jogo inicializado e pronto para começar.");
         };
     </script>
 </body>
