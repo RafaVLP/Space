@@ -672,6 +672,38 @@
             width: 0%; /* Inicia vazia */
             transition: width 0.2s ease-out;
         }
+
+        /* Estilos para o sistema de partículas */
+        .particle-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Garante que o container de partículas não interfira com eventos do mouse/touch */
+            z-index: 15; /* Acima dos inimigos, mas abaixo das telas de menu */
+            overflow: hidden; /* Garante que as partículas não saiam do container */
+        }
+
+        .particle {
+            position: absolute;
+            background-color: #f6e05e; /* Cor padrão da partícula (amarelo) */
+            border-radius: 50%;
+            opacity: 1;
+            transform: scale(1);
+            animation: explode 0.8s forwards; /* Duração e preenchimento para manter o estado final */
+        }
+
+        @keyframes explode {
+            0% {
+                transform: translate(0, 0) scale(0.5);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--particle-dx), var(--particle-dy)) scale(0);
+                opacity: 0;
+            }
+        }
     </style>
 </head>
 <body>
@@ -711,6 +743,9 @@
 
                     <div class="player" id="player">
                     </div>
+
+                    <!-- Particle Container -->
+                    <div class="particle-container" id="particleContainer"></div>
 
                     <div class="start-screen" id="startScreen">
                         <p id="pressStartText">PRESS START</p> <!-- Texto "PRESS START" piscando -->
@@ -849,7 +884,7 @@
             pauseContinueText, rankingScreen, highScoresList, nameInputForm, 
             playerNameInput, submitScoreButton, rankingPlayAgainButton, showRankingButton,
             backToStartScreenButton, stageScoreDisplay, pauseRankingContainer, pauseHighScoresList,
-            resumeButton, pauseShowRankingButton, pauseRestartButton; // Adicionado elementos da tela de pausa
+            resumeButton, pauseShowRankingButton, pauseRestartButton, particleContainer; // Adicionado particleContainer
 
         // Segmentos de fundo
         const bgSegment1 = document.getElementById('bgSegment1');
@@ -1714,6 +1749,45 @@
         }
 
         /**
+         * Cria e anima partículas de explosão no local de um inimigo derrotado.
+         * @param {number} x - Posição X do inimigo.
+         * @param {number} y - Posição Y do inimigo.
+         * @param {string} color - Cor base das partículas (ex: '#FF0000').
+         */
+        function createParticles(x, y, color) {
+            const numberOfParticles = 15;
+            const particleSize = 5 + Math.random() * 10; // Tamanho aleatório entre 5px e 15px
+
+            for (let i = 0; i < numberOfParticles; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+                
+                // Posição inicial da partícula no centro do inimigo
+                particle.style.left = `${x + (Math.random() * 20 - 10)}px`; // Pequena variação na posição
+                particle.style.top = `${y + (Math.random() * 20 - 10)}px`;
+                particle.style.width = `${particleSize}px`;
+                particle.style.height = `${particleSize}px`;
+                particle.style.backgroundColor = color;
+
+                // Direção e distância aleatórias para a animação
+                const angle = Math.random() * Math.PI * 2; // Ângulo aleatório em radianos
+                const distance = 30 + Math.random() * 50; // Distância de explosão
+                const dx = Math.cos(angle) * distance;
+                const dy = Math.sin(angle) * distance;
+
+                particle.style.setProperty('--particle-dx', `${dx}px`);
+                particle.style.setProperty('--particle-dy', `${dy}px`);
+
+                particleContainer.appendChild(particle);
+
+                // Remove a partícula após a animação
+                particle.addEventListener('animationend', () => {
+                    particle.remove();
+                });
+            }
+        }
+
+        /**
          * Atualiza a posição dos objetos em caída e seus estados.
          * @param {DOMHighResTimeStamp} currentTime - O tempo atual.
          */
@@ -1861,6 +1935,28 @@
                                     object.classList.remove('enemy-hit-effect');
                                 }, 100); 
                             } else {
+                                // Inimigo derrotado: Criar partículas
+                                const enemyX = parseFloat(object.style.left) + object.offsetWidth / 2;
+                                const enemyY = parseFloat(object.style.top) + object.offsetHeight / 2;
+                                let particleColor = '#f6e05e'; // Cor padrão da partícula
+                                if (object.dataset.isHeavy === 'true') {
+                                    particleColor = '#FF4500'; // Vermelho/Laranja para heavy enemy
+                                } else {
+                                    // Tenta obter a cor base do inimigo normal (do filtro hue-rotate)
+                                    const hueRotateMatch = object.style.filter.match(/hue-rotate\((\d+)deg\)/);
+                                    if (hueRotateMatch && hueRotateMatch[1]) {
+                                        // Converte o hue para uma cor aproximada (simplificado)
+                                        const hue = parseInt(hueRotateMatch[1]);
+                                        if (hue >= 0 && hue < 60) particleColor = '#f6e05e'; // Amarelo
+                                        else if (hue >= 60 && hue < 120) particleColor = '#7ed321'; // Verde
+                                        else if (hue >= 120 && hue < 180) particleColor = '#00BFFF'; // Azul claro
+                                        else if (hue >= 180 && hue < 240) particleColor = '#bd10e0'; // Roxo
+                                        else if (hue >= 240 && hue < 300) particleColor = '#FF69B4'; // Rosa
+                                        else particleColor = '#f6e05e'; // Padrão
+                                    }
+                                }
+                                createParticles(enemyX, enemyY, particleColor);
+
                                 object.remove();
                                 fallingObjects.splice(j, 1);
                                 j--; 
@@ -2999,6 +3095,9 @@
             resumeButton = document.getElementById('resumeButton');
             pauseShowRankingButton = document.getElementById('pauseShowRankingButton');
             pauseRestartButton = document.getElementById('pauseRestartButton');
+
+            // Referência ao novo contêiner de partículas
+            particleContainer = document.getElementById('particleContainer');
 
 
             // --- Eventos de Controle ---
