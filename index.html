@@ -722,7 +722,7 @@
             width: 100%;
             text-align: center;
             color: #ffffff;
-            font-size: 0.5rem;
+            font-size: 0.6rem; /* Aumentado para 0.6rem */
             z-index: 2;
             white-space: nowrap; /* Garante que o texto não quebre linha */
             line-height: 1; /* Garante que o texto ocupe apenas uma linha verticalmente */
@@ -904,7 +904,14 @@
         }
 
         .boss-health-bar-horizontal-text {
-            display: none; /* Sem texto numérico */
+            position: absolute; /* Para posicionar o texto sobre a barra */
+            width: 100%;
+            text-align: center;
+            color: #ffffff;
+            font-size: 0.6rem; /* Mesma fonte das outras barras */
+            z-index: 2;
+            white-space: nowrap;
+            line-height: 1;
         }
 
         /* Estilos para o container do menu de pausa e ranking */
@@ -1070,20 +1077,22 @@
                 
                 <!-- Nova Tela de Configurações -->
                 <div class="settings-screen hidden" id="settingsScreen">
-                    <h1>CONFIGURAÇÕES DE SOM</h1>
-                    <div class="settings-option">
-                        <span>Som do Tiro:</span>
-                        <input type="checkbox" id="toggleShotSound">
+                    <div class="menu-container"> <!-- NOVO: Container para o menu de configurações -->
+                        <h1>CONFIGURAÇÕES DE SOM</h1>
+                        <div class="settings-option">
+                            <span>Som do Tiro:</span>
+                            <input type="checkbox" id="toggleShotSound">
+                        </div>
+                        <div class="settings-option">
+                            <span>Música do Ambiente:</span>
+                            <input type="checkbox" id="toggleAmbientMusic">
+                        </div>
+                        <div class="settings-option">
+                            <span>Som de Explosão:</span>
+                            <input type="checkbox" id="toggleExplosionSound">
+                        </div>
+                        <div class="menu-item" id="backToPreviousScreenFromSettings">VOLTAR</div> <!-- Usando menu-item -->
                     </div>
-                    <div class="settings-option">
-                        <span>Música do Ambiente:</span>
-                        <input type="checkbox" id="toggleAmbientMusic">
-                    </div>
-                    <div class="settings-option">
-                        <span>Som de Explosão:</span>
-                        <input type="checkbox" id="toggleExplosionSound">
-                    </div>
-                    <button class="back-button" id="backToPreviousScreenFromSettings">VOLTAR</button> <!-- ID alterado -->
                 </div>
             </div>
 
@@ -1092,7 +1101,7 @@
                 <!-- Barra de Vida do Boss Horizontal (agora no rodapé) -->
                 <div class="status-bar-wrapper boss-health-bar-horizontal-wrapper hidden" id="bossHealthBarHorizontalWrapper">
                     <div class="status-bar-fill" id="bossHealthBarHorizontalFill"></div>
-                    <span class="boss-health-bar-horizontal-text" id="bossHealthBarHorizontalText"></span> <!-- Texto removido da barra -->
+                    <span class="boss-health-bar-horizontal-text" id="bossHealthBarHorizontalText"></span> <!-- Texto reintroduzido da barra -->
                 </div>
                 <!-- Player Stats (Lv and Dmg) e Botão de Pausa -->
                 <div class="footer-bottom-row">
@@ -1191,7 +1200,7 @@
         // NOVAS REFERÊNCIAS PARA A BARRA DE VIDA DO BOSS (agora horizontal)
         let bossHealthBarHorizontalWrapper;
         let bossHealthBarHorizontalFill;
-        // let bossHealthBarHorizontalText; // REMOVIDO: Texto numérico da barra do boss
+        let bossHealthBarHorizontalText; // REINTRODUZIDO: Texto numérico da barra do boss
 
         // NOVAS REFERÊNCIAS PARA A BARRA DE PROGESSO DO ESTÁGIO (antiga barra de escudo)
         let stageProgressBarWrapper;
@@ -1236,7 +1245,7 @@
         let toggleShotSoundCheckbox;
         let toggleAmbientMusicCheckbox;
         let toggleExplosionSoundCheckbox;
-        let backToPreviousScreenFromSettingsButton;
+        let backToPreviousScreenFromSettings; // Renomeado para evitar conflito com o elemento HTML
 
         // Variável para rastrear a tela anterior antes de ir para as configurações
         let previousScreen = null;
@@ -3067,15 +3076,20 @@
             console.log(`Debuff coletado: ${type}`); 
 
             if (type === 'damage_down') {
-                console.log("DEBUFF - Antes: Stage:", currentBulletStage, "Side Shots:", currentSideShotsLevel, "Damage Bonus:", damage1Bonus);
+                console.log("DEBUFF - Antes: Stage:", currentBulletStage, "Side Shots:", currentSideShotsLevel, "Damage Bonus:", damage1Bonus, "Player Level:", playerLevel, "Bullet Damage (before debuff logic):", bulletDamage);
 
-                if (damage1Bonus > 0) { // Prioriza a remoção do bônus de dano
+                // Prioridade 1: Reduzir o dano base (damage1Bonus)
+                if (damage1Bonus > 0) {
                     damage1Bonus = Math.max(0, damage1Bonus - 1);
                     console.log(`Debuff: damage1Bonus reduzido para ${damage1Bonus}`);
-                } else if (currentSideShotsLevel > 0) { // Depois remove um tiro lateral
+                } 
+                // Prioridade 2: Reduzir o número de tiros laterais
+                else if (currentSideShotsLevel > 0) {
                     currentSideShotsLevel = Math.max(0, currentSideShotsLevel - 1);
                     console.log(`Debuff: Tiros laterais reduzidos para o nível ${currentSideShotsLevel + 1}.`);
-                } else if (currentBulletStage > 0) { // Por último, retrocede o estágio de bala
+                } 
+                // Prioridade 3: Retroceder o estágio de bala
+                else if (currentBulletStage > 0) {
                     currentBulletStage--; 
                     currentSideShotsLevel = 0; // Reseta tiros laterais ao retroceder estágio
                     console.log(`Debuff: Retornou ao estágio de bala ${currentBulletStage}. Tiros laterais resetados.`);
@@ -3083,7 +3097,7 @@
                     console.log("Debuff: Não há mais nada para reduzir.");
                 }
                 
-                updatePlayerStatsBasedOnLevel(); 
+                updatePlayerStatsBasedOnLevel(); // Recalcula bulletDamage com base nas novas configurações
                 console.log("DEBUFF - Depois: Stage:", currentBulletStage, "Side Shots:", currentSideShotsLevel, "Damage Bonus:", damage1Bonus, "Final Bullet Damage:", bulletDamage);
             }
             updatePlayerDamageDisplay();
@@ -3271,10 +3285,11 @@
          * Atualiza a barra de vida do boss (a barra real, não a de progresso).
          */
         function updateBossActualHealthBar() {
-            if (bossHealthBarHorizontalFill) { 
+            if (bossHealthBarHorizontalFill && bossHealthBarHorizontalText) { 
                 const maxBossHealthForLevel = initialBossHealth * Math.pow(2, bossLevel);
                 const healthPercentage = (bossHealth / maxBossHealthForLevel) * 100;
                 bossHealthBarHorizontalFill.style.width = `${healthPercentage}%`; /* Largura para horizontal */
+                bossHealthBarHorizontalText.textContent = `${Math.round(bossHealth)} / ${Math.round(maxBossHealthForLevel)}`; // NOVO: Texto numérico
 
                 if (healthPercentage > 60) {
                     bossHealthBarHorizontalFill.style.backgroundColor = '#48bb78'; /* Verde */
@@ -3909,6 +3924,7 @@
             // NOVAS REFERÊNCIAS PARA A BARRA DE VIDA DO BOSS (agora horizontal)
             bossHealthBarHorizontalWrapper = document.getElementById('bossHealthBarHorizontalWrapper');
             bossHealthBarHorizontalFill = document.getElementById('bossHealthBarHorizontalFill');
+            bossHealthBarHorizontalText = document.getElementById('bossHealthBarHorizontalText'); // REINTRODUZIDO: Texto numérico da barra do boss
 
             // NOVAS REFERÊNCIAS PARA A BARRA DE PROGESSO DO ESTÁGIO (antiga barra de escudo)
             stageProgressBarWrapper = document.getElementById('stageProgressBarWrapper');
@@ -3956,7 +3972,7 @@
             toggleShotSoundCheckbox = document.getElementById('toggleShotSound');
             toggleAmbientMusicCheckbox = document.getElementById('toggleAmbientMusic');
             toggleExplosionSoundCheckbox = document.getElementById('toggleExplosionSound'); 
-            backToPreviousScreenFromSettingsButton = document.getElementById('backToPreviousScreenFromSettings');
+            backToPreviousScreenFromSettings = document.getElementById('backToPreviousScreenFromSettings'); // Renomeado para evitar conflito com o elemento HTML
 
             // NOVO: Referência para o display de falas do chefe
             bossTauntDisplay = document.getElementById('bossTauntDisplay');
@@ -4164,7 +4180,7 @@
                 saveSoundSettings();
             });
 
-            backToPreviousScreenFromSettingsButton.addEventListener('click', () => {
+            backToPreviousScreenFromSettings.addEventListener('click', () => {
                 settingsScreen.classList.add('hidden');
                 if (previousScreen === 'pause') {
                     pauseScreen.classList.remove('hidden');
@@ -4258,7 +4274,6 @@
             } catch (error) {
                 console.error("Erro ao chamar Gemini API:", error);
                 bossTauntDisplay.textContent = "Erro na comunicação...";
-                bossTauntDisplay.classList.add('visible');
                 setTimeout(() => {
                     bossTauntDisplay.classList.remove('visible');
                 }, 2000);
